@@ -71,6 +71,7 @@ class MusicPlayerService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
+        Log.d("MusicPlayerService", "blablabla")
         return null
     }
 
