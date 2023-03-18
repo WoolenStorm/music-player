@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Music Player</string>
+    <string name="options">Options</string>
+    <string name="play_previous">Play previous song</string>
+    <string name="play">Play current song</string>
+    <string name="play_next">Play next song</string>
+    <string name="pause">Pause</string>
+    <string name="shuffle_on">Disable shuffle</string>
+    <string name="shuffle_off">Enable shuffle</string>
+</resources>
