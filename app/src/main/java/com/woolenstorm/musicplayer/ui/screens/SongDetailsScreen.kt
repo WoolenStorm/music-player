@@ -76,7 +76,7 @@ fun SongDetailsScreen(
             SongTitleRow(song = uiState.song ?: Song())
             IconButton(
                 onClick = {
-                    onToggleShuffle()
+                    viewModel.onToggleShuffle(context)
                     Log.d("SongDetailsScreen", "${viewModel.isShuffling.value}")
                 }
             ) {
@@ -96,10 +96,10 @@ fun SongDetailsScreen(
                 },
                 modifier = Modifier.padding(8.dp)
             )
-            Log.d("SongDetailsScreen", "${viewModel.mediaPlayer.currentPosition.toFloat()}")
+//            Log.d("SongDetailsScreen", "${viewModel.mediaPlayer.currentPosition.toFloat()}")
             ActionButtonsRow(
                 isPlaying = viewModel.mediaPlayer.isPlaying,
-                onPause = { viewModel.pause() },
+                onPause = { viewModel.pause(context) },
                 onContinuePlaying = { viewModel.continuePlaying(songDetailsContext, viewModel.mediaPlayer.currentPosition) },
                 onPlayPrevious = {
                     viewModel.previousSong(songDetailsContext)

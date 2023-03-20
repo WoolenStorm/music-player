@@ -1,34 +1,23 @@
 package com.woolenstorm.musicplayer
 
 import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.media.MediaPlayer
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.Snackbar
-import androidx.compose.material.SnackbarDefaults
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.woolenstorm.musicplayer.data.DefaultAppContainer
 import com.woolenstorm.musicplayer.data.DefaultMusicPlayerApi
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
+import com.woolenstorm.musicplayer.model.MyBroadcastReceiver
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.MusicPlayerApp
 import com.woolenstorm.musicplayer.ui.screens.AppViewModel
-import com.woolenstorm.musicplayer.ui.screens.MusicPlayerService
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
-import kotlin.properties.Delegates
 
 class MainActivity : ComponentActivity() {
 //    private val shuffle = sp.getBoolean("IS_SHUFFLING", false)
@@ -39,13 +28,19 @@ class MainActivity : ComponentActivity() {
     private var artist = ""
     private var isSongChosen = false
     private var uri = Uri.EMPTY
-//    private var currentPosition = 0
-
     private val apiService = DefaultMusicPlayerApi(this)
-
+    private lateinit var receiver: MyBroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        val mediaPlayer = (applicationContext as MusicPlayerApplication).container.mediaPlayer
+        val viewModel = AppViewModel(apiService, mediaPlayer)
+        val filter = IntentFilter("com.woolenstorm.musicplayer")
+        receiver = MyBroadcastReceiver(viewModel, this)
+
+        registerReceiver(receiver, filter)
 
         checkForPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, 100)
         val sp = this.getPreferences(Context.MODE_PRIVATE)
@@ -65,8 +60,7 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "onCreate() uri = $uri")
         Log.d("MainActivity", "onCreate() title = $title")
 
-        val mediaPlayer = (applicationContext as MusicPlayerApplication).container.mediaPlayer
-        val viewModel = AppViewModel(apiService, mediaPlayer)
+
         viewModel.isShuffling.value = isShuffling
         viewModel.isSongChosen.value = isSongChosen
         viewModel.currentUri.value = uri
@@ -89,7 +83,7 @@ class MainActivity : ComponentActivity() {
                     },
                     onSongClicked = {
                         viewModel.isPlaying.value = true
-//                        viewModel.currentUri.value = it.uri
+                        viewModel.currentUri.value = it.uri
                         viewModel.updateUiState(MusicPlayerUiState(isPlaying = true))
                         isSongChosen = true
                         title = it.title
@@ -97,7 +91,6 @@ class MainActivity : ComponentActivity() {
                         id = it.id
                         uri = it.uri
                         Log.d("MainActivity", "onSongClicked(), title = ${it.title}")
-
                     },
                     viewModel = viewModel,
                     activity = this
@@ -120,6 +113,7 @@ class MainActivity : ComponentActivity() {
 //            putInt(KEY_CURRENT_POSITION, currentPosition)
             apply()
         }
+//        unregisterReceiver(receiver)
         super.onDestroy()
 
 

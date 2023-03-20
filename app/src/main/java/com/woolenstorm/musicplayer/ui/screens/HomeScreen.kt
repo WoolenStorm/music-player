@@ -76,7 +76,7 @@ fun HomeScreen(
                         song = it,
                         onSongClicked = {
                             onSongClicked(it)
-                            viewModel.createNotification(context)
+//                            viewModel.createNotification(context)
                         },
                         onOptionsClicked = { onOptionsClicked(it) }
                     )
@@ -90,7 +90,7 @@ fun HomeScreen(
                     isPlaying = uiState.value.isPlaying,
                     modifier = Modifier.background(Color(0xFFF9FAFC)),
 //                    uiState = uiState.value,
-                    onPause = viewModel::pause,
+                    onPause = { viewModel.pause(context) },
                     onContinue = { viewModel.continuePlaying(context, viewModel.mediaPlayer.currentPosition) },
                     onPlayNext = { viewModel.nextSong(context) },
                     onPlayPrevious = { viewModel.previousSong(context) },

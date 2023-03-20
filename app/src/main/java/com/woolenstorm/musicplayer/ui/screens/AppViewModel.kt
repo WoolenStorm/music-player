@@ -7,23 +7,16 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.getInstance
-import androidx.lifecycle.viewmodel.compose.saveable
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.MusicPlayerApi
+import com.woolenstorm.musicplayer.model.PlaybackService
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Song
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlin.random.Random
 
@@ -58,6 +51,11 @@ class AppViewModel(
         _uiState.update { newUiState }
     }
 
+    fun onToggleShuffle(context: Context) {
+        isShuffling.value = !isShuffling.value
+        createNotification(context)
+    }
+
     fun nextSong(context: Context) {
         _uiState.update {
             val newIndex = if (isShuffling.value) {
@@ -74,6 +72,7 @@ class AppViewModel(
         }
         cancel()
         play(context)
+//        createNotification(context, "PLAY")
     }
 
     fun previousSong(context: Context) {
@@ -92,17 +91,22 @@ class AppViewModel(
             )
         }
         cancel()
+//        createNotification(context, "PLAY")
         play(context)
     }
 
     fun cancel() {
+//        createNotification(context, "CANCEL")
         mediaPlayer.stop()
         mediaPlayer.reset()
         _uiState.update { it.copy(isPlaying = false) }
     }
 
     fun play(context: Context) {
-        createNotification(context)
+//        createNotification(context, "PLAY")
+
+//        val intent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "TOGGLE_IS_PLAYING")
+//        context.sendBroadcast(intent)
         _uiState.update { it.copy(isPlaying = true) }
 
         viewModelScope.launch {
@@ -128,14 +132,18 @@ class AppViewModel(
             prepare()
             start()
         }
+        createNotification(context)
     }
 
-    fun createNotification(context: Context) {
-        val intent = Intent(context, MusicPlayerService::class.java)
+    private fun createNotification(context: Context) {
+        val intent = Intent(context, PlaybackService::class.java)
         intent.putExtra(KEY_TITLE, uiState.value.song.title)
-        Log.d("AppViewModel", "136 title = ${uiState.value.song.title}")
         intent.putExtra(KEY_ARTIST, uiState.value.song.artist)
+        intent.putExtra(KEY_URI, uiState.value.song.uri)
         intent.putExtra(KEY_ARTWORK, uiState.value.song.albumArtworkUri)
+        intent.putExtra(KEY_IS_PLAYING, mediaPlayer.isPlaying)
+        intent.putExtra(KEY_IS_SHUFFLING, isShuffling.value)
+//        intent.putExtra("ACTION", action)
         ContextCompat.startForegroundService(context, intent)
         val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
         with (sp.edit()) {
@@ -150,12 +158,16 @@ class AppViewModel(
 //
     }
 
-    fun pause() {
+    fun pause(context: Context) {
+
         mediaPlayer.pause()
+        createNotification(context)
         _uiState.update { it.copy(isPlaying = false /*, currentPosition = position*/) }
     }
 
     fun continuePlaying(context: Context, currentPosition: Int = 0) {
+
+        Log.d("AppViewModel", "currentPosition = ${mediaPlayer.currentPosition}")
 
         _uiState.update { it.copy(isPlaying = true) }
         viewModelScope.launch {
@@ -166,6 +178,7 @@ class AppViewModel(
                 }
             }
         }
+        val currPos = mediaPlayer.currentPosition
         mediaPlayer.reset()
         mediaPlayer.apply {
             setAudioAttributes(
@@ -179,25 +192,14 @@ class AppViewModel(
             }
             setDataSource(context, currentUri.value)
             prepare()
-            seekTo(currentPosition)
+            seekTo(currPos)
             start()
         }
+        createNotification(context)
     }
 
     fun updateTimestamp(newTimestamp: Float) {
         _uiState.update { it.copy(timestamp = newTimestamp) }
         mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
     }
-
-//    companion object {
-//        val Factory: ViewModelProvider.Factory = viewModelFactory {
-//            initializer {
-//                val application = (this[APPLICATION_KEY] as MusicPlayerApplication)
-//                AppViewModel(
-//                    apiService = application.container.apiService,
-//                    mediaPlayer = application.container.mediaPlayer
-//                )
-//            }
-//        }
-//    }
 }

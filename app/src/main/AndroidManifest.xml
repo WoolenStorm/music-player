@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicPlayer"
         tools:targetApi="33">
-        <service android:name="com.woolenstorm.musicplayer.ui.screens.MusicPlayerService" />
+        <service android:name="com.woolenstorm.musicplayer.model.PlaybackService" />
         <activity
             android:configChanges="orientation"
             android:name=".MainActivity"
