@@ -101,12 +101,9 @@ fun SongDetailsScreen(
                 isPlaying = viewModel.mediaPlayer.isPlaying,
                 onPause = { viewModel.pause(context) },
                 onContinuePlaying = { viewModel.continuePlaying(songDetailsContext, viewModel.mediaPlayer.currentPosition) },
-                onPlayPrevious = {
-                    viewModel.previousSong(songDetailsContext)
-                                 },
-                onPlayNext = {
-                    viewModel.nextSong(songDetailsContext)
-                })
+                onPlayPrevious = { viewModel.previousSong(songDetailsContext) },
+                onPlayNext = { viewModel.nextSong(songDetailsContext) }
+            )
         }
     }
 }

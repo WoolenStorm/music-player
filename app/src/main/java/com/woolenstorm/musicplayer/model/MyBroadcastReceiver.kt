@@ -33,6 +33,7 @@ class MyBroadcastReceiver(
             } else {
                 viewModel.continuePlaying(activity)
             }
+            "TOGGLE_IS_SHUFFLING" -> viewModel.onToggleShuffle(activity)
         }
     }
 

@@ -42,10 +42,6 @@ class PlaybackService : Service() {
     private lateinit var receiver: MyBroadcastReceiver
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaController: MediaControllerCompat
-    private lateinit var player: MediaPlayer
-    private var lastClickTime: Long = 0
-    private var debugTime: Long = 0
-
     override fun onCreate() {
         mediaSession = MediaSessionCompat(application, "tag")
         mediaSession.isActive = true

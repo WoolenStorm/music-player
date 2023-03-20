@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
         val sp = this.getPreferences(Context.MODE_PRIVATE)
         val sharedPreferences = this.getSharedPreferences("song_info", Context.MODE_PRIVATE)
 
-        isShuffling = sp.getBoolean(KEY_IS_SHUFFLING, false)
+        isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false)
         id = sp.getLong(KEY_ID, -1)
         title = sharedPreferences.getString(KEY_TITLE, "") ?: "<no_title>"
         artist = sharedPreferences.getString(KEY_ARTIST, "") ?: "<unknown>"
@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
                     },
                     onSongClicked = {
                         viewModel.isPlaying.value = true
-                        viewModel.currentUri.value = it.uri
+//                        viewModel.currentUri.value = it.uri
                         viewModel.updateUiState(MusicPlayerUiState(isPlaying = true))
                         isSongChosen = true
                         title = it.title

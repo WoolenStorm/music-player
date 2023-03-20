@@ -32,7 +32,6 @@ class AppViewModel(
     val isShuffling = mutableStateOf(false)
     val isSongChosen = mutableStateOf(false)
     val isPlaying = mutableStateOf(false)
-//    val currentPosition = mutableStateOf(0)
     val isHomeScreen = mutableStateOf(true)
     val currentUri = mutableStateOf(Uri.EMPTY)
 
@@ -53,6 +52,12 @@ class AppViewModel(
 
     fun onToggleShuffle(context: Context) {
         isShuffling.value = !isShuffling.value
+
+        val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+        with (sp.edit()) {
+            putBoolean(KEY_IS_SHUFFLING, isShuffling.value)
+            apply()
+        }
         createNotification(context)
     }
 
@@ -72,7 +77,6 @@ class AppViewModel(
         }
         cancel()
         play(context)
-//        createNotification(context, "PLAY")
     }
 
     fun previousSong(context: Context) {
@@ -91,22 +95,16 @@ class AppViewModel(
             )
         }
         cancel()
-//        createNotification(context, "PLAY")
         play(context)
     }
 
     fun cancel() {
-//        createNotification(context, "CANCEL")
         mediaPlayer.stop()
         mediaPlayer.reset()
         _uiState.update { it.copy(isPlaying = false) }
     }
 
     fun play(context: Context) {
-//        createNotification(context, "PLAY")
-
-//        val intent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "TOGGLE_IS_PLAYING")
-//        context.sendBroadcast(intent)
         _uiState.update { it.copy(isPlaying = true) }
 
         viewModelScope.launch {
@@ -143,7 +141,6 @@ class AppViewModel(
         intent.putExtra(KEY_ARTWORK, uiState.value.song.albumArtworkUri)
         intent.putExtra(KEY_IS_PLAYING, mediaPlayer.isPlaying)
         intent.putExtra(KEY_IS_SHUFFLING, isShuffling.value)
-//        intent.putExtra("ACTION", action)
         ContextCompat.startForegroundService(context, intent)
         val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
         with (sp.edit()) {
@@ -153,16 +150,13 @@ class AppViewModel(
             apply()
         }
         Log.d("AppViewModel", "createNotification(): uri = ${sp.getString(KEY_URI, "")}")
-//        val intentAction = Intent(context, ActionReceiver::class.java)
-//        intentAction.putExtra("action", "actionName")
-//
     }
 
     fun pause(context: Context) {
 
         mediaPlayer.pause()
         createNotification(context)
-        _uiState.update { it.copy(isPlaying = false /*, currentPosition = position*/) }
+        _uiState.update { it.copy(isPlaying = false) }
     }
 
     fun continuePlaying(context: Context, currentPosition: Int = 0) {
