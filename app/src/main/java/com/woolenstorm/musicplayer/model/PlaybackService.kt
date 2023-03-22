@@ -22,6 +22,7 @@ import android.view.KeyEvent
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.*
 import androidx.core.content.ContextCompat
@@ -31,6 +32,10 @@ import androidx.media2.session.MediaSession
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.woolenstorm.musicplayer.*
+import com.woolenstorm.musicplayer.data.DefaultMusicPlayerApi
+import com.woolenstorm.musicplayer.data.MusicPlayerApi
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
@@ -42,7 +47,16 @@ class PlaybackService : Service() {
     private lateinit var receiver: MyBroadcastReceiver
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaController: MediaControllerCompat
+    private lateinit var musicApi: MusicPlayerApi
+    private lateinit var songs: List<Song>
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
+        musicApi = (application as MusicPlayerApplication).container.apiService
+
+        GlobalScope.launch {
+            songs = musicApi.getSongs()
+        }
+
         mediaSession = MediaSessionCompat(application, "tag")
         mediaSession.isActive = true
         Log.d("PlaybackService", "onCreate()!!!!!!!!!!!!!!!!")
