@@ -9,25 +9,30 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.MusicPlayerApi
+import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.PlaybackService
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Song
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlin.random.Random
 
 class AppViewModel(
-    private val apiService: MusicPlayerApi,
-    val mediaPlayer: MediaPlayer
+    private val songsRepository: SongsRepository
+//    private val apiService: MusicPlayerApi,
+//    val mediaPlayer: MediaPlayer
 ) : ViewModel() {
 
+    private val apiService = songsRepository.musicApi
+    val mediaPlayer = songsRepository.player
 
-    var songs = mutableListOf<Song>()
-        private set
+
+    val songs = songsRepository.songs
 
     val isShuffling = mutableStateOf(false)
     val isSongChosen = mutableStateOf(false)
@@ -40,11 +45,11 @@ class AppViewModel(
     )
     val uiState = _uiState.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            songs = apiService.getSongs()
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            songs = apiService.getSongs()
+//        }
+//    }
 
     fun updateUiState(newUiState: MusicPlayerUiState) {
         _uiState.update { newUiState }
@@ -195,5 +200,14 @@ class AppViewModel(
     fun updateTimestamp(newTimestamp: Float) {
         _uiState.update { it.copy(timestamp = newTimestamp) }
         mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
+    }
+
+    companion object {
+        val factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = this[APPLICATION_KEY] as MusicPlayerApplication
+                AppViewModel(application.container.songsRepository)
+            }
+        }
     }
 }

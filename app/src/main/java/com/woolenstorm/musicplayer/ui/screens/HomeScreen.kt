@@ -279,7 +279,7 @@ fun HomeScreenPreview() {
         val isShuffling = remember { mutableStateOf(false) }
         HomeScreen(
             songs = songs,
-            viewModel = AppViewModel(DefaultMusicPlayerApi(LocalContext.current), MediaPlayer()),
+            viewModel = viewModel(factory = AppViewModel.factory),
 //            isSongChosen = songChosen
         )
     }

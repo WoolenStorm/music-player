@@ -34,6 +34,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.DefaultMusicPlayerApi
 import com.woolenstorm.musicplayer.data.MusicPlayerApi
+import com.woolenstorm.musicplayer.data.SongsRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -49,22 +50,17 @@ class PlaybackService : Service() {
     private lateinit var mediaController: MediaControllerCompat
     private lateinit var musicApi: MusicPlayerApi
     private lateinit var songs: List<Song>
-    @OptIn(DelicateCoroutinesApi::class)
-    override fun onCreate() {
-        musicApi = (application as MusicPlayerApplication).container.apiService
+    private lateinit var songsRepository: SongsRepository
+    private lateinit var player: MediaPlayer
 
-        GlobalScope.launch {
-            songs = musicApi.getSongs()
-        }
+    override fun onCreate() {
+        songsRepository = (application as MusicPlayerApplication).container.songsRepository
+        songs = songsRepository.songs
+        player = songsRepository.player
 
         mediaSession = MediaSessionCompat(application, "tag")
         mediaSession.isActive = true
         Log.d("PlaybackService", "onCreate()!!!!!!!!!!!!!!!!")
-//        player = MediaPlayer()
-//        receiver = MyBroadcastReceiver(player)
-
-//        registerReceiver(receiver, IntentFilter("com.woolenstorm.musicplayer"))
-
 
         mediaSession.setMetadata(
             MediaMetadataCompat.Builder()
@@ -82,7 +78,7 @@ class PlaybackService : Service() {
         val artist = intent?.getStringExtra(KEY_ARTIST)
         val isPlaying = intent?.getBooleanExtra(KEY_IS_PLAYING, true) ?: true
         val isShuffling = intent?.getBooleanExtra(KEY_IS_SHUFFLING, false) ?: false
-        val uri = Uri.parse(intent?.getStringExtra(KEY_URI) ?: "")
+//        val uri = Uri.parse(intent?.getStringExtra(KEY_URI) ?: "")
         val artworkUri = intent?.getStringExtra(KEY_ARTWORK)?.let { Uri.parse(it) } ?: Uri.EMPTY
 
 

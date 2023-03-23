@@ -8,6 +8,8 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.util.Log
 import androidx.compose.ui.platform.LocalContext
+import com.woolenstorm.musicplayer.MusicPlayerApplication
+import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.ui.screens.AppViewModel
 import kotlin.system.exitProcess
 
@@ -18,7 +20,10 @@ class MyBroadcastReceiver(
     private val viewModel: AppViewModel,
     private val activity: Activity
     ) : BroadcastReceiver() {
+    private var songsRepository = (activity.application as MusicPlayerApplication).container.songsRepository
+
     override fun onReceive(context: Context?, intent: Intent) {
+        Log.d("MyBroadcastReceiver", "songs found: ${songsRepository.songs.size}")
 
         val message = intent.getStringExtra("ACTION") ?: ""
         Log.d("MyBroadcastReceiver", "extras = ${intent.extras}")

@@ -6,14 +6,10 @@ import android.media.MediaPlayer
 import androidx.compose.ui.platform.LocalContext
 
 interface AppContainer {
-//    val apiService: MusicPlayerApiService
-    val mediaPlayer: MediaPlayer
-    val apiService: MusicPlayerApi
+    val songsRepository: SongsRepository
 }
 
 
 class DefaultAppContainer(context: Context) : AppContainer {
-    override val apiService = DefaultMusicPlayerApi(context)
-    override val mediaPlayer = MediaPlayer()
-
+    override val songsRepository = SongsRepository(context)
 }

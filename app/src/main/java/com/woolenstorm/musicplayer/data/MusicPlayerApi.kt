@@ -10,15 +10,15 @@ import android.util.Log
 import com.woolenstorm.musicplayer.model.Song
 import java.io.File
 
-private const val TAG = "MusicPlayerApiService"
+private const val TAG = "MusicPlayerApi"
 
 interface MusicPlayerApi {
-    suspend fun getSongs(): MutableList<Song>
+   fun getSongs(): MutableList<Song>
 }
 
 class DefaultMusicPlayerApi(private val context: Context) : MusicPlayerApi {
 
-    override suspend fun getSongs(): MutableList<Song> {
+    override fun getSongs(): MutableList<Song> {
         Log.d(TAG, "getting songs....")
         val list = mutableListOf<Song>()
         val collection =
@@ -92,14 +92,16 @@ class DefaultMusicPlayerApi(private val context: Context) : MusicPlayerApi {
                 cursor.close()
             }
         }
-//        Log.d(TAG, "songs found: ${list.size}")
-//        Log.d(TAG, "songs found: ${list[0].title}")
-//        Log.d(TAG, "songs found: ${list[0].artist}")
-//        Log.d(TAG, "songs found: ${list[0].album}")
-//        Log.d(TAG, "songs found: ${list[0].albumId}")
-//        Log.d(TAG, "songs found: ${list[0].path}")
-        (0..20).forEach {
-            Log.d(TAG, list[it].albumArtworkUri)
+        if (list.size >= 21) {
+            Log.d(TAG, "songs found: ${list.size}")
+            Log.d(TAG, "songs found: ${list[0].title}")
+            Log.d(TAG, "songs found: ${list[0].artist}")
+            Log.d(TAG, "songs found: ${list[0].album}")
+            Log.d(TAG, "songs found: ${list[0].albumId}")
+            Log.d(TAG, "songs found: ${list[0].path}")
+            (0..20).forEach {
+                Log.d(TAG, list[it].albumArtworkUri)
+            }
         }
         return list
     }

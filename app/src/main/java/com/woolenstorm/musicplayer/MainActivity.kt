@@ -5,10 +5,14 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.Snackbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.woolenstorm.musicplayer.data.DefaultMusicPlayerApi
@@ -28,21 +32,19 @@ class MainActivity : ComponentActivity() {
     private var artist = ""
     private var isSongChosen = false
     private var uri = Uri.EMPTY
-    private val apiService = DefaultMusicPlayerApi(this)
+//    private val apiService = DefaultMusicPlayerApi(this)
     private lateinit var receiver: MyBroadcastReceiver
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-
-        val mediaPlayer = (applicationContext as MusicPlayerApplication).container.mediaPlayer
-        val viewModel = AppViewModel(apiService, mediaPlayer)
+    private fun initializeApp() {
+        val songsRepository = (applicationContext as MusicPlayerApplication).container.songsRepository
+        val mediaPlayer = songsRepository.player
+        val viewModel = AppViewModel(songsRepository)
         val filter = IntentFilter("com.woolenstorm.musicplayer")
         receiver = MyBroadcastReceiver(viewModel, this)
 
         registerReceiver(receiver, filter)
 
-        checkForPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, 100)
+
         val sp = this.getPreferences(Context.MODE_PRIVATE)
         val sharedPreferences = this.getSharedPreferences("song_info", Context.MODE_PRIVATE)
 
@@ -99,6 +101,38 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {isGranted: Boolean ->
+            if (isGranted) {
+                application.onCreate()
+                initializeApp()
+            } else {
+                Toast
+                    .makeText(this, "Cannot access your songs :(", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+        val permission = if (Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO else android.Manifest.permission.READ_EXTERNAL_STORAGE
+        when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
+                applicationContext,
+                permission
+            ) -> initializeApp()
+            else -> requestPermissionLauncher.launch(permission)
+        }
+
+
+//        checkForPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, 100)
+
+
+
+    }
+
     override fun onDestroy() {
         Log.d("MainActivity", "onDestroy() uri = $uri")
         val sp = this.getPreferences(Context.MODE_PRIVATE) ?: return
@@ -113,7 +147,7 @@ class MainActivity : ComponentActivity() {
 //            putInt(KEY_CURRENT_POSITION, currentPosition)
             apply()
         }
-//        unregisterReceiver(receiver)
+        unregisterReceiver(receiver)
         super.onDestroy()
 
 

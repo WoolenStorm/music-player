@@ -255,10 +255,10 @@ fun SongProgressSlider(
 @Preview(showBackground = true)
 @Composable
 fun SongDetailsScreenPreview() {
-    val isShuffling = remember { mutableStateOf(false) }
+//    val isShuffling = remember { mutableStateOf(false) }
     MusicPlayerTheme {
         SongDetailsScreen(
-            viewModel = AppViewModel(DefaultMusicPlayerApi(LocalContext.current), MediaPlayer()),
+            viewModel = viewModel(factory = AppViewModel.factory),
             context = LocalContext.current
         )
     }
