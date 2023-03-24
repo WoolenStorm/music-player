@@ -1,12 +1,11 @@
 package com.woolenstorm.musicplayer.ui.screens
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.media.MediaPlayer
 import android.net.Uri
+import android.os.SystemClock
 import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.BackHandler
@@ -15,46 +14,29 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.woolenstorm.musicplayer.KEY_ARTIST
-import com.woolenstorm.musicplayer.KEY_ARTWORK
-import com.woolenstorm.musicplayer.KEY_TITLE
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
-import com.woolenstorm.musicplayer.data.DefaultMusicPlayerApi
-import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import java.io.FileNotFoundException
 
 @Composable
 fun SongDetailsScreen(
     context: Context,
     viewModel: AppViewModel,
-    modifier: Modifier = Modifier,
-    isCurrentlyPlaying: MutableState<Boolean> = mutableStateOf(false),
-    onToggleShuffle: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
-    val songDetailsContext = context ?: LocalContext.current
-    val isShuffling = viewModel.isShuffling
-
     BackHandler {
         viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
     }
@@ -62,7 +44,8 @@ fun SongDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
 
-    Log.d("SongDetailsScreen", "isCurrentlyPlaying = $isCurrentlyPlaying")
+    if (uiState.isPlaying) viewModel.startProgressSlider(SystemClock.elapsedRealtime())
+
 
     Surface(modifier = modifier.fillMaxSize()) {
         Column(
@@ -74,7 +57,7 @@ fun SongDetailsScreen(
             Spacer(modifier = Modifier.height(48.dp))
             AlbumArtwork(uiState.song.albumArtworkUri)
             Spacer(modifier = Modifier.height(24.dp))
-            SongTitleRow(song = uiState.song ?: Song())
+            SongTitleRow(uiState.song)
             IconButton(
                 onClick = {
                     viewModel.onToggleShuffle(context)
@@ -83,33 +66,29 @@ fun SongDetailsScreen(
             ) {
                 Icon(
                     painter = painterResource(
-                        id = if (isShuffling.value) R.drawable.shuffle_on else R.drawable.shuffle_off
+                        id = if (uiState.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
                     ),
                     contentDescription = stringResource(
-                        id = if (isShuffling.value) R.string.shuffle_on else R.string.shuffle_off)
+                        id = if (uiState.isShuffling) R.string.shuffle_on else R.string.shuffle_off)
                 )
             }
             SongProgressSlider(
                 duration = uiState.song.duration,
                 value = currentPosition,
-                onValueChange = {
-                    viewModel.updateTimestamp(it)
-                },
+                onValueChange = { viewModel.updateTimestamp(it) },
                 modifier = Modifier.padding(8.dp)
             )
-//            Log.d("SongDetailsScreen", "${viewModel.mediaPlayer.currentPosition.toFloat()}")
             ActionButtonsRow(
-                isPlaying = viewModel.mediaPlayer.isPlaying,
+                isPlaying = uiState.isPlaying,
                 onPause = { viewModel.pause(context) },
-                onContinuePlaying = { viewModel.continuePlaying(songDetailsContext) },
-                onPlayPrevious = { viewModel.previousSong(songDetailsContext) },
-                onPlayNext = { viewModel.nextSong(songDetailsContext) }
+                onContinuePlaying = { viewModel.continuePlaying(context) },
+                onPlayPrevious = { viewModel.previousSong(context) },
+                onPlayNext = { viewModel.nextSong(context) }
             )
         }
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun AlbumArtwork(
     artworkUriString: String,
@@ -151,7 +130,7 @@ fun SongTitleRow(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(text = song.title, style = MaterialTheme.typography.h5, maxLines = 1)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = song.artist,style = MaterialTheme.typography.body1)
+        Text(text = song.artist, style = MaterialTheme.typography.body1)
     }
 }
 
@@ -278,6 +257,7 @@ fun AlbumArtworkPreview() {
 fun SongTitleRowPreview() {
     MusicPlayerTheme {
         SongTitleRow(
+//            detailsScreenState = DetailsScreenState()
             song = Song(
                 uri = Uri.EMPTY,
                 id = 0,

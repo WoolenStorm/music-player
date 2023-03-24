@@ -29,12 +29,10 @@ import com.woolenstorm.musicplayer.model.Song
 fun MusicPlayerApp(
     viewModel: AppViewModel,
     activity: Activity?,
-    modifier: Modifier = Modifier,
-    onToggleShuffle: () -> Unit = {},
-    onSongClicked: (Song) -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
 
-    val isCurrentlyPlaying = rememberSaveable { mutableStateOf(viewModel.mediaPlayer.isPlaying) }
+//    val isCurrentlyPlaying = rememberSaveable { mutableStateOf(viewModel.mediaPlayer.isPlaying) }
     val context = LocalContext.current
 //    val uiState = viewModel.uiState.collectAsState()
 //    Log.d("MusicPlayerApp", "viewModel.uri = ${uiState.value.song.uri}")
@@ -48,35 +46,44 @@ fun MusicPlayerApp(
                     viewModel = viewModel,
                     songs = viewModel.songs,
                     onSongClicked = { song ->
-                        onSongClicked(song)
-                        viewModel.isSongChosen.value = true
-                        if (song.uri != viewModel.currentUri.value) {
-                            viewModel.cancel()
-//                            Log.d("MusicPlayerApp", "61: isCurrentlyPlaying.value = false")
-                            Log.d("MusicPlayerApp", "${song.uri} ??? ${viewModel.currentUri.value}")
-                            viewModel.updateUiState(
-                                MusicPlayerUiState(
-                                    song = song,
-                                    isPlaying = true,
-                                    timestamp = 0f,
-                                    currentIndex = viewModel.songs.indexOf(song)
-                                )
-                            )
-                            viewModel.play(activity ?: context)
-                        } else {
-                            viewModel.updateUiState(
-                                MusicPlayerUiState(
-                                    song = song,
-                                    isPlaying = true,
-                                    currentIndex = viewModel.songs.indexOf(song)
-                                )
-                            )
-                            Log.d("MusicPlayerApp", "61: isCurrentlyPlaying.value = true")
-                            isCurrentlyPlaying.value = true
-                            if (!viewModel.mediaPlayer.isPlaying) viewModel.continuePlaying(context)
+                        viewModel.updateUiState(
+                            currentIndex = viewModel.songs.indexOf(song),
+                            isSongChosen = true
+                        )
+                        when {
+                            song == viewModel.uiState.value.song && viewModel.uiState.value.isPlaying -> {}
+                            song == viewModel.uiState.value.song && !viewModel.uiState.value.isPlaying -> {
+                                viewModel.continuePlaying(context)
+                            }
+                            song != viewModel.uiState.value.song -> {
+                                viewModel.cancel()
+                                viewModel.updateUiState(song = song)
+                                viewModel.play(context)
+                            }
                         }
+//                        if (song != viewModel.uiState.value.song) {
+//                            viewModel.updateUiState(
+//                                song = song,
+//                                currentIndex = viewModel.songs.indexOf(song),
+//                                isSongChosen = true
+//                            )
+//                            viewModel.cancel()
+//                            Log.d("MusicPlayerApp", "${song.uri} ??? ${viewModel.currentUri.value}")
+//                            viewModel.updateUiState(
+//                                song = song,
+//                                isPlaying = true,
+//                                timestamp = 0f,
+//                                currentIndex = viewModel.songs.indexOf(song)
+//                            )
+//                            viewModel.play(activity ?: context)
+//                        } else {
+//                            if (!viewModel.uiState.value.isPlaying) {
+//                                viewModel.updateUiState(isPlaying = true)
+//                                viewModel.continuePlaying(activity ?: context)
+//                            }
+//                        }
                         viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
-                        viewModel.currentUri.value = song.uri
+//                        viewModel.currentUri.value = song.uri
 //                        viewModel.startProgressSlider()
                     }
                 )
@@ -84,9 +91,7 @@ fun MusicPlayerApp(
 //                Log.d("MusicPlayerApp", "isCurrentlyPlaying.value = ${isCurrentlyPlaying.value}")
                 SongDetailsScreen(
                     viewModel = viewModel,
-                    isCurrentlyPlaying = isCurrentlyPlaying,
-                    context = activity?.applicationContext ?: LocalContext.current,
-                    onToggleShuffle = onToggleShuffle
+                    context = activity?.applicationContext ?: LocalContext.current
                 )
             }
         }

@@ -1,15 +1,8 @@
 package com.woolenstorm.musicplayer.ui.screens
 
-import android.annotation.SuppressLint
-import android.content.Intent
-import android.graphics.fonts.FontStyle
-import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -29,17 +22,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.woolenstorm.musicplayer.KEY_ARTIST
-import com.woolenstorm.musicplayer.KEY_ARTWORK
-import com.woolenstorm.musicplayer.KEY_TITLE
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
-import com.woolenstorm.musicplayer.data.DefaultMusicPlayerApi
-import com.woolenstorm.musicplayer.model.MusicPlayerUiState
-import java.time.format.TextStyle
 
 @Composable
 fun HomeScreen(
@@ -50,7 +36,7 @@ fun HomeScreen(
     onOptionsClicked: (Song) -> Unit = {}
 ) {
     Log.d("HomeScreen", songs.size.toString())
-    val uiState = viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
 //    val intent = Intent(context, MusicPlayerService::class.java)
@@ -80,11 +66,11 @@ fun HomeScreen(
                     Divider()
                 }
             }
-            AnimatedVisibility(visible = viewModel.isSongChosen.value) {
+            AnimatedVisibility(visible = uiState.isSongChosen) {
                 CurrentPlayingSong(
-                    title = uiState.value.song.title,
-                    artist = uiState.value.song.artist,
-                    isPlaying = uiState.value.isPlaying,
+                    title = uiState.song.title,
+                    artist = uiState.song.artist,
+                    isPlaying = uiState.isPlaying,
                     modifier = Modifier.background(Color(0xFFF9FAFC)),
 //                    uiState = uiState.value,
                     onPause = { viewModel.pause(context) },

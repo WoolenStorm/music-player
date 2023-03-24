@@ -3,23 +3,18 @@ package com.woolenstorm.musicplayer.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.media.MediaPlayer
 import android.net.Uri
+import android.os.SystemClock
 import android.util.Log
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.woolenstorm.musicplayer.*
-import com.woolenstorm.musicplayer.data.MusicPlayerApi
 import com.woolenstorm.musicplayer.data.SongsRepository
-import com.woolenstorm.musicplayer.model.PlaybackService
-import com.woolenstorm.musicplayer.model.MusicPlayerUiState
-import com.woolenstorm.musicplayer.model.MyBroadcastReceiver
-import com.woolenstorm.musicplayer.model.Song
+import com.woolenstorm.musicplayer.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.random.Random
@@ -30,7 +25,6 @@ class AppViewModel(
 
     val mediaPlayer = songsRepository.player
 
-
     val songs = songsRepository.songs
 
     val isShuffling = mutableStateOf(false)
@@ -40,95 +34,98 @@ class AppViewModel(
     val currentUri = mutableStateOf(Uri.EMPTY)
     var currentIndex = 0
     val currentPosition = MutableStateFlow(mediaPlayer.currentPosition.toFloat())
+    var job: Job? = null
 
-    private var _uiState = MutableStateFlow(
-        MusicPlayerUiState()
-    )
-    val uiState = _uiState.asStateFlow()
 
-    fun updateUiState(newUiState: MusicPlayerUiState) {
-        _uiState.update { newUiState }
+    val uiState = songsRepository.uiState
+
+
+    fun updateUiState(
+        song: Song? = null,
+        isPlaying: Boolean? = null,
+        timestamp: Float? = null,
+        currentIndex: Int? = null,
+        isShuffling: Boolean? = null,
+        isSongChosen: Boolean? = null,
+        playbackStarted: Long? = null
+    ) {
+        songsRepository.updateUiState(
+            song = song,
+            isPlaying = isPlaying,
+            timestamp = timestamp,
+            currentIndex = currentIndex,
+            isShuffling = isShuffling,
+            isSongChosen = isSongChosen,
+            playbackStarted = playbackStarted
+        )
     }
 
     init {
-        startProgressSlider()
+        startProgressSlider(SystemClock.elapsedRealtime())
     }
 
-    fun startProgressSlider() {
-        viewModelScope.launch {
-            while (mediaPlayer.isPlaying) {
-//                _uiState.update {
-//                    it.copy(timestamp = mediaPlayer.currentPosition.toFloat())
-//                }
+    fun startProgressSlider(startTime: Long) {
+        job?.cancel()
+        job = viewModelScope.launch {
+            while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
+//                currentPosition.value = (SystemClock.elapsedRealtime() - uiState.value.playbackStarted).toFloat() + uiState.value.timestamp
                 currentPosition.value = mediaPlayer.currentPosition.toFloat()
                 delay(250)
+//                Log.d("AppViewModel", "currentPosition.value = ${currentPosition.value}")
+//                Log.d("AppViewModel", "mediaPlayer.currentPosition = ${mediaPlayer.currentPosition}")
             }
         }
     }
 
     fun onToggleShuffle(context: Context) {
-        isShuffling.value = !isShuffling.value
+        updateUiState(isShuffling = !uiState.value.isShuffling)
 
-        val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
-        with (sp.edit()) {
-            putBoolean(KEY_IS_SHUFFLING, isShuffling.value)
-            apply()
-        }
+//        val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+//        with (sp.edit()) {
+//            putBoolean(KEY_IS_SHUFFLING, isShuffling.value)
+//            apply()
+//        }
         createNotification(context)
     }
 
     fun nextSong(context: Context) {
-        val newIndex = if (isShuffling.value) {
+        val newIndex = if (uiState.value.isShuffling) {
             Random.nextInt(0, songs.size)
-        } else {
-            if (currentIndex >= songs.size - 1) 0 else currentIndex + 1
-        }
-        val nSong = songs[newIndex]
-        currentIndex = newIndex % songs.size
-        _uiState.update {
-            it.copy(song = nSong, currentIndex = currentIndex)
-        }
+        } else (uiState.value.currentIndex + 1) % songs.size
+        updateUiState(
+            song = songs[newIndex],
+            currentIndex = newIndex
+        )
         Log.d("AppViewModel", "oldIndex = $currentIndex")
+        Log.d("AppViewModel", "uiState = ${uiState.value}")
         cancel()
         play(context)
     }
 
     fun previousSong(context: Context) {
-        val newIndex = if (isShuffling.value) {
+        val newIndex = if (uiState.value.isShuffling) {
             Random.nextInt(0, songs.size)
         } else {
-            if (currentIndex <= 0) songs.size - 1 else currentIndex - 1
+            if (uiState.value.currentIndex <= 0) songs.size - 1 else uiState.value.currentIndex - 1
         }
         val nSong = songs[newIndex]
-        currentIndex = newIndex % songs.size
-
-        _uiState.update {
-            it.copy(song = nSong, currentIndex = newIndex)
-        }
+        updateUiState(
+            song = nSong,
+            currentIndex = newIndex % songs.size
+        )
         cancel()
         play(context)
     }
 
     fun cancel() {
-        isPlaying.value = false
         mediaPlayer.stop()
         mediaPlayer.reset()
-        _uiState.update { it.copy(isPlaying = false) }
+        updateUiState(isPlaying = false)
     }
 
     fun play(context: Context) {
 
-        val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
-        with (sp.edit()) {
-            putBoolean(KEY_IS_PLAYING, true)
-            putBoolean(KEY_IS_SONG_CHOSEN, true)
-            apply()
-        }
-        _uiState.update { it.copy(isPlaying = true) }
-
-//        val intent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "CLOSE")
-//        context.sendBroadcast(intent)
-
+        cancel()
         mediaPlayer.apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
@@ -143,55 +140,25 @@ class AppViewModel(
             prepare()
             start()
         }
-
-        startProgressSlider()
+        updateUiState(isPlaying = true, playbackStarted = SystemClock.elapsedRealtime())
+        startProgressSlider(SystemClock.elapsedRealtime())
         createNotification(context)
     }
 
     private fun createNotification(context: Context) {
         val intent = Intent(context, PlaybackService::class.java)
-        intent.putExtra(KEY_TITLE, uiState.value.song.title)
-        intent.putExtra(KEY_ARTIST, uiState.value.song.artist)
-        intent.putExtra(KEY_URI, uiState.value.song.uri)
-//        intent.putExtra(KEY_URI, currentUri.value.toString())
-        intent.putExtra(KEY_ARTWORK, uiState.value.song.albumArtworkUri)
-        intent.putExtra(KEY_IS_PLAYING, mediaPlayer.isPlaying)
-        intent.putExtra(KEY_IS_SHUFFLING, isShuffling.value)
         ContextCompat.startForegroundService(context, intent)
-        val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
-        with (sp.edit()) {
-            putString(KEY_URI, currentUri.value.toString())
-            putString(KEY_ARTIST, uiState.value.song.artist)
-            putString(KEY_TITLE, uiState.value.song.title)
-            putBoolean(KEY_IS_PLAYING, mediaPlayer.isPlaying)
-            putInt(KEY_INDEX, currentIndex)
-            putBoolean(KEY_IS_SHUFFLING, isShuffling.value)
-            apply()
-        }
-        Log.d("AppViewModel", "createNotification(): uri = ${sp.getString(KEY_TITLE, "")}")
     }
 
     fun pause(context: Context) {
 
         mediaPlayer.pause()
         createNotification(context)
-        _uiState.update { it.copy(isPlaying = false) }
+        updateUiState(isPlaying = false)
     }
 
     fun continuePlaying(context: Context) {
 
-        Log.d("AppViewModel", "currentPosition = ${mediaPlayer.currentPosition}")
-
-        _uiState.update { it.copy(isPlaying = true) }
-//        viewModelScope.launch {
-//            while (mediaPlayer.isPlaying) {
-//                currentPosition.value = mediaPlayer.currentPosition.toFloat()
-//                delay(250)
-////                _uiState.update {
-////                    it.copy(timestamp = mediaPlayer.currentPosition.toFloat())
-////                }
-//            }
-//        }
         val currPos = mediaPlayer.currentPosition
         mediaPlayer.reset()
 
@@ -212,14 +179,16 @@ class AppViewModel(
         }
 //        mediaPlayer.prepare()
 //        mediaPlayer.start()
-        startProgressSlider()
+        updateUiState(isPlaying = true, playbackStarted = SystemClock.elapsedRealtime())
+        startProgressSlider(SystemClock.elapsedRealtime())
         createNotification(context)
     }
 
     fun updateTimestamp(newTimestamp: Float) {
-        _uiState.update { it.copy(timestamp = newTimestamp) }
-        currentPosition.value = newTimestamp
+        updateUiState(timestamp = newTimestamp)
+//        currentPosition.value = newTimestamp
         mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
+//        startProgressSlider(SystemClock.elapsedRealtime())
     }
 
     companion object {

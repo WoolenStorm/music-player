@@ -18,4 +18,9 @@ class MusicPlayerApplication : Application() {
         if (ContextCompat.checkSelfPermission(applicationContext, permission)
             == PackageManager.PERMISSION_GRANTED) container = DefaultAppContainer(this)
     }
+
+    override fun onTerminate() {
+        container.songsRepository.saveState(this)
+        super.onTerminate()
+    }
 }

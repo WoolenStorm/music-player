@@ -6,5 +6,7 @@ data class MusicPlayerUiState(
     val timestamp: Float = 0f,
     val currentIndex: Int = 0,
     val isShuffling: Boolean = false,
-//    val currentPosition: Int = 0
+    val isSongChosen: Boolean = false,
+    val currentPosition: Int = 0,
+    val playbackStarted: Long = 0
 )

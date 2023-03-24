@@ -6,39 +6,26 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
-import android.os.SystemClock
 import android.provider.MediaStore
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.KeyEvent
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.*
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.media.session.MediaButtonReceiver
-import androidx.media2.session.MediaSession
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import com.woolenstorm.musicplayer.*
-import com.woolenstorm.musicplayer.data.DefaultMusicPlayerApi
 import com.woolenstorm.musicplayer.data.MusicPlayerApi
 import com.woolenstorm.musicplayer.data.SongsRepository
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import java.io.FileNotFoundException
 
 private const val DOUBLE_TAP_DELTA_MILLIS: Long = 300
@@ -52,13 +39,17 @@ class PlaybackService : Service() {
     private lateinit var songs: List<Song>
     private lateinit var songsRepository: SongsRepository
     private lateinit var player: MediaPlayer
+    private lateinit var uiState: StateFlow<MusicPlayerUiState>
 
     override fun onCreate() {
         receiver = MyBroadcastReceiver(application)
+
         application.registerReceiver(receiver, IntentFilter("com.woolenstorm.musicplayer"))
         songsRepository = (application as MusicPlayerApplication).container.songsRepository
         songs = songsRepository.songs
-//        player = songsRepository.player
+        player = MediaPlayer()
+        uiState = songsRepository.uiState
+
 
         mediaSession = MediaSessionCompat(application, "tag")
         mediaSession.isActive = true
@@ -78,12 +69,14 @@ class PlaybackService : Service() {
 //    private fun createIntent(action: String, )
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val sp = application.getSharedPreferences("song_info", Context.MODE_PRIVATE)
-        val title = sp.getString(KEY_TITLE, "<no title>") ?: "<no title>"
-        val artist = sp.getString(KEY_ARTIST, "<unknown>") ?: "<unknown>"
-        val isPlaying = sp.getBoolean(KEY_IS_PLAYING, false)
-        val isShuffling = sp.getBoolean(KEY_IS_SHUFFLING, false)
-        val artworkUri = Uri.parse(sp.getString(KEY_ARTWORK, "") ?: "")
+//        val sp = application.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+//        val title = sp.getString(KEY_TITLE, "<no title>") ?: "<no title>"
+//        val artist = sp.getString(KEY_ARTIST, "<unknown>") ?: "<unknown>"
+//        val isPlaying = sp.getBoolean(KEY_IS_PLAYING, false)
+//        val isShuffling = sp.getBoolean(KEY_IS_SHUFFLING, false)
+//        val artworkUri = Uri.parse(sp.getString(KEY_ALBUM_ARTWORK, "") ?: "")
+//        Log.d("PlaybackService", "artworkUri = $artworkUri")
+
 
 
         val closingIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "CLOSE")
@@ -123,6 +116,7 @@ class PlaybackService : Service() {
         }
 //        Log.d("PlaybackService", "isPlaying = $isPlaying")
 
+        val artworkUri = Uri.parse(uiState.value.song.albumArtworkUri) ?: Uri.EMPTY
 
         val source = try {
             if (artworkUri != Uri.EMPTY) MediaStore.Images.Media.getBitmap(
@@ -136,14 +130,14 @@ class PlaybackService : Service() {
 
         val notification = Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_play)
-            .setContentTitle(title)
-            .setContentText(artist)
+            .setContentTitle(uiState.value.song.title)
+            .setContentText(uiState.value.song.artist)
             .setLargeIcon(source)
             .addAction(R.drawable.ic_previous, "play_previous", pendingPrevSongIntent)
             .setOngoing(true)
-            .addAction(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play, "play_current", pendingToggleIsPlayingIntent)
+            .addAction(if (uiState.value.isPlaying) R.drawable.ic_pause else R.drawable.ic_play, "play_current", pendingToggleIsPlayingIntent)
             .addAction(R.drawable.ic_next, "play_next", pendingNextSongIntent)
-            .addAction(if (isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off, "shuffle", pendingToggleIsShufflingIntent)
+            .addAction(if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off, "shuffle", pendingToggleIsShufflingIntent)
             .addAction(R.drawable.baseline_close_24, "CLOSE", pendingClosingIntent)
 //            .setContentIntent(activityPendingIntent)
             .setPriority(PRIORITY_LOW)
@@ -194,5 +188,6 @@ class PlaybackService : Service() {
 
     override fun onDestroy() {
         unregisterReceiver(receiver)
+        player.release()
     }
 }
