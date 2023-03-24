@@ -4,7 +4,7 @@ import android.net.Uri
 
 data class Song(
     val uri: Uri = Uri.EMPTY,
-    val id: Long = -1,
+    val id: Long = 0,
     val duration: Float = 388000f,
     val title: String = "Nothing Else Matters",
     val artist: String = "Metallica",

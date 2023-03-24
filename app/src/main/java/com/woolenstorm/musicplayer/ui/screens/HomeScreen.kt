@@ -74,10 +74,7 @@ fun HomeScreen(
                 items(songs) {
                     SongItem(
                         song = it,
-                        onSongClicked = {
-                            onSongClicked(it)
-//                            viewModel.createNotification(context)
-                        },
+                        onSongClicked = { onSongClicked(it) },
                         onOptionsClicked = { onOptionsClicked(it) }
                     )
                     Divider()
@@ -91,10 +88,13 @@ fun HomeScreen(
                     modifier = Modifier.background(Color(0xFFF9FAFC)),
 //                    uiState = uiState.value,
                     onPause = { viewModel.pause(context) },
-                    onContinue = { viewModel.continuePlaying(context, viewModel.mediaPlayer.currentPosition) },
+                    onContinue = { viewModel.continuePlaying(context) },
                     onPlayNext = { viewModel.nextSong(context) },
                     onPlayPrevious = { viewModel.previousSong(context) },
-                    onSongClicked = { viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value }
+                    onSongClicked = {
+                        viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
+//                        viewModel.startProgressSlider()
+                    }
                 )
             }
 //            Log.d("HomeScreen", "isSongChosen.value = ${isSongChosen.value}")

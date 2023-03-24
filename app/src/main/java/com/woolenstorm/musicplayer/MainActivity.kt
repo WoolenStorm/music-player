@@ -27,11 +27,12 @@ class MainActivity : ComponentActivity() {
 //    private val shuffle = sp.getBoolean("IS_SHUFFLING", false)
 
     private var isShuffling = false
-    private var id: Long = -1
+//    private var id: Long = 0
     private var title = ""
     private var artist = ""
     private var isSongChosen = false
     private var uri = Uri.EMPTY
+    private var index = 0
 //    private val apiService = DefaultMusicPlayerApi(this)
     private lateinit var receiver: MyBroadcastReceiver
 
@@ -39,26 +40,17 @@ class MainActivity : ComponentActivity() {
         val songsRepository = (applicationContext as MusicPlayerApplication).container.songsRepository
         val mediaPlayer = songsRepository.player
         val viewModel = AppViewModel(songsRepository)
-        val filter = IntentFilter("com.woolenstorm.musicplayer")
-        receiver = MyBroadcastReceiver(viewModel, this)
 
-        registerReceiver(receiver, filter)
-
-
-        val sp = this.getPreferences(Context.MODE_PRIVATE)
-        val sharedPreferences = this.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("song_info", Context.MODE_PRIVATE)
 
         isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false)
-        id = sp.getLong(KEY_ID, -1)
+        index = sharedPreferences.getInt(KEY_INDEX, 0)
         title = sharedPreferences.getString(KEY_TITLE, "") ?: "<no_title>"
         artist = sharedPreferences.getString(KEY_ARTIST, "") ?: "<unknown>"
-//        uri = Uri.parse(sp.getString(KEY_URI, Uri.EMPTY.toString())) ?: Uri.EMPTY
         uri = Uri.parse(sharedPreferences.getString(KEY_URI, ""))
-        Log.d("MainActivity", "onCreate(60): uri = $uri")
-//        isPlaying = sp.getBoolean(KEY_IS_PLAYING, false)
-//        currentPosition = sp.getInt(KEY_CURRENT_POSITION, 0)
+        Log.d("MainActivity", "onCreate(60): index = $index")
 
-        isSongChosen = sp.getBoolean(KEY_IS_SONG_CHOSEN, false)
+        isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false)
         Log.d("MainActivity", "onCreate() uri = $uri")
         Log.d("MainActivity", "onCreate() title = $title")
 
@@ -66,11 +58,12 @@ class MainActivity : ComponentActivity() {
         viewModel.isShuffling.value = isShuffling
         viewModel.isSongChosen.value = isSongChosen
         viewModel.currentUri.value = uri
+        viewModel.currentIndex = index
 //        viewModel.isPlaying.value = isPlaying
         Log.d("MainActivity", "viewModel.currentUri = ${viewModel.currentUri.value}")
         viewModel.updateUiState(
             MusicPlayerUiState(
-                song = Song(id = id, title = title, artist = artist, uri = uri),
+                song = songsRepository.songs[index],
                 isPlaying = mediaPlayer.isPlaying,
             )
         )
@@ -84,15 +77,24 @@ class MainActivity : ComponentActivity() {
                         viewModel.isShuffling.value = !viewModel.isShuffling.value
                     },
                     onSongClicked = {
+                        index = songsRepository.songs.indexOf(it)
+                        viewModel.currentIndex = index
+                        with (sharedPreferences.edit()) {
+                            putInt(KEY_INDEX, viewModel.currentIndex)
+                            putString(KEY_TITLE, it.title)
+                            putString(KEY_ARTIST, it.artist)
+                            apply()
+                        }
                         viewModel.isPlaying.value = true
 //                        viewModel.currentUri.value = it.uri
                         viewModel.updateUiState(MusicPlayerUiState(isPlaying = true))
                         isSongChosen = true
                         title = it.title
                         artist = it.artist
-                        id = it.id
+//                        id = it.id
                         uri = it.uri
                         Log.d("MainActivity", "onSongClicked(), title = ${it.title}")
+//                                    viewModel.play(this)
                     },
                     viewModel = viewModel,
                     activity = this
@@ -133,25 +135,25 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    override fun onDestroy() {
-        Log.d("MainActivity", "onDestroy() uri = $uri")
-        val sp = this.getPreferences(Context.MODE_PRIVATE) ?: return
-        with (sp.edit()) {
-            putBoolean(KEY_IS_SHUFFLING, isShuffling)
-            putLong(KEY_ID, id)
-            putString(KEY_TITLE, title)
-            putString(KEY_ARTIST, artist)
-            putBoolean(KEY_IS_SONG_CHOSEN, isSongChosen)
-            putString(KEY_URI, uri.toString())
-//            putBoolean(KEY_IS_PLAYING, isPlaying)
-//            putInt(KEY_CURRENT_POSITION, currentPosition)
-            apply()
-        }
-        unregisterReceiver(receiver)
-        super.onDestroy()
-
-
-    }
+//    override fun onDestroy() {
+//        Log.d("MainActivity", "onDestroy() title = $title")
+//        val sp = this.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+//        with (sp.edit()) {
+//            putBoolean(KEY_IS_SHUFFLING, isShuffling)
+////            putLong(KEY_ID, id)
+////            putString(KEY_TITLE, title)
+////            putString(KEY_ARTIST, artist)
+////            putBoolean(KEY_IS_SONG_CHOSEN, isSongChosen)
+////            putString(KEY_URI, uri.toString())
+////            putBoolean(KEY_IS_SONG_CHOSEN, isSongChosen)
+////            putInt(KEY_INDEX, index)
+////            putBoolean(KEY_IS_PLAYING, isPlaying)
+////            putInt(KEY_CURRENT_POSITION, currentPosition)
+//            apply()
+//        }
+////        unregisterReceiver(receiver)
+//        super.onDestroy()
+//    }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)

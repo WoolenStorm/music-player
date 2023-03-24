@@ -54,9 +54,11 @@ class PlaybackService : Service() {
     private lateinit var player: MediaPlayer
 
     override fun onCreate() {
+        receiver = MyBroadcastReceiver(application)
+        application.registerReceiver(receiver, IntentFilter("com.woolenstorm.musicplayer"))
         songsRepository = (application as MusicPlayerApplication).container.songsRepository
         songs = songsRepository.songs
-        player = songsRepository.player
+//        player = songsRepository.player
 
         mediaSession = MediaSessionCompat(application, "tag")
         mediaSession.isActive = true
@@ -73,13 +75,15 @@ class PlaybackService : Service() {
         super.onCreate()
     }
 
+//    private fun createIntent(action: String, )
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val title = intent?.getStringExtra(KEY_TITLE)
-        val artist = intent?.getStringExtra(KEY_ARTIST)
-        val isPlaying = intent?.getBooleanExtra(KEY_IS_PLAYING, true) ?: true
-        val isShuffling = intent?.getBooleanExtra(KEY_IS_SHUFFLING, false) ?: false
-//        val uri = Uri.parse(intent?.getStringExtra(KEY_URI) ?: "")
-        val artworkUri = intent?.getStringExtra(KEY_ARTWORK)?.let { Uri.parse(it) } ?: Uri.EMPTY
+        val sp = application.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+        val title = sp.getString(KEY_TITLE, "<no title>") ?: "<no title>"
+        val artist = sp.getString(KEY_ARTIST, "<unknown>") ?: "<unknown>"
+        val isPlaying = sp.getBoolean(KEY_IS_PLAYING, false)
+        val isShuffling = sp.getBoolean(KEY_IS_SHUFFLING, false)
+        val artworkUri = Uri.parse(sp.getString(KEY_ARTWORK, "") ?: "")
 
 
         val closingIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "CLOSE")
@@ -87,6 +91,11 @@ class PlaybackService : Service() {
         val prevSongIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "PLAY_PREVIOUS")
         val toggleIsPlayingIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "TOGGLE_IS_PLAYING")
         val toggleIsShufflingIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "TOGGLE_IS_SHUFFLING")
+        val activityIntent = Intent(application, MainActivity::class.java)
+        val activityPendingIntent = androidx.core.app.TaskStackBuilder.create(application).run {
+            addNextIntent(activityIntent)
+            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+        }
 
         val flag = PendingIntent.FLAG_IMMUTABLE
 
@@ -124,10 +133,11 @@ class PlaybackService : Service() {
         } catch (e: FileNotFoundException) {
             getBitmapFromDrawable(applicationContext, R.drawable.album_artwork_placeholder)
         }
+
         val notification = Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_play)
-            .setContentTitle(title ?: "<no title>")
-            .setContentText(artist ?: "<unknown>")
+            .setContentTitle(title)
+            .setContentText(artist)
             .setLargeIcon(source)
             .addAction(R.drawable.ic_previous, "play_previous", pendingPrevSongIntent)
             .setOngoing(true)
@@ -135,7 +145,7 @@ class PlaybackService : Service() {
             .addAction(R.drawable.ic_next, "play_next", pendingNextSongIntent)
             .addAction(if (isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off, "shuffle", pendingToggleIsShufflingIntent)
             .addAction(R.drawable.baseline_close_24, "CLOSE", pendingClosingIntent)
-            
+//            .setContentIntent(activityPendingIntent)
             .setPriority(PRIORITY_LOW)
             .setSilent(true)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_DEFERRED)

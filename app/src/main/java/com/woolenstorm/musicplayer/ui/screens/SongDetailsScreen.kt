@@ -60,6 +60,7 @@ fun SongDetailsScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
+    val currentPosition by viewModel.currentPosition.collectAsState()
 
     Log.d("SongDetailsScreen", "isCurrentlyPlaying = $isCurrentlyPlaying")
 
@@ -90,7 +91,7 @@ fun SongDetailsScreen(
             }
             SongProgressSlider(
                 duration = uiState.song.duration,
-                value = viewModel.mediaPlayer.currentPosition.toFloat(),
+                value = currentPosition,
                 onValueChange = {
                     viewModel.updateTimestamp(it)
                 },
@@ -100,7 +101,7 @@ fun SongDetailsScreen(
             ActionButtonsRow(
                 isPlaying = viewModel.mediaPlayer.isPlaying,
                 onPause = { viewModel.pause(context) },
-                onContinuePlaying = { viewModel.continuePlaying(songDetailsContext, viewModel.mediaPlayer.currentPosition) },
+                onContinuePlaying = { viewModel.continuePlaying(songDetailsContext) },
                 onPlayPrevious = { viewModel.previousSong(songDetailsContext) },
                 onPlayNext = { viewModel.nextSong(songDetailsContext) }
             )

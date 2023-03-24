@@ -62,7 +62,7 @@ fun MusicPlayerApp(
                                     currentIndex = viewModel.songs.indexOf(song)
                                 )
                             )
-                            viewModel.play(context)
+                            viewModel.play(activity ?: context)
                         } else {
                             viewModel.updateUiState(
                                 MusicPlayerUiState(
@@ -71,16 +71,17 @@ fun MusicPlayerApp(
                                     currentIndex = viewModel.songs.indexOf(song)
                                 )
                             )
-//                            Log.d("MusicPlayerApp", "61: isCurrentlyPlaying.value = true")
+                            Log.d("MusicPlayerApp", "61: isCurrentlyPlaying.value = true")
                             isCurrentlyPlaying.value = true
                             if (!viewModel.mediaPlayer.isPlaying) viewModel.continuePlaying(context)
                         }
                         viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
                         viewModel.currentUri.value = song.uri
+//                        viewModel.startProgressSlider()
                     }
                 )
             } else {
-                Log.d("MusicPlayerApp", "isCurrentlyPlaying.value = ${isCurrentlyPlaying.value}")
+//                Log.d("MusicPlayerApp", "isCurrentlyPlaying.value = ${isCurrentlyPlaying.value}")
                 SongDetailsScreen(
                     viewModel = viewModel,
                     isCurrentlyPlaying = isCurrentlyPlaying,
