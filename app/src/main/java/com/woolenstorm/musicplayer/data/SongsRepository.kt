@@ -3,9 +3,7 @@ package com.woolenstorm.musicplayer.data
 import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import com.woolenstorm.musicplayer.*
-import com.woolenstorm.musicplayer.model.DetailsScreenState
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,12 +11,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class SongsRepository(context: Context) {
+
     private val musicApi = DefaultMusicPlayerApi(context)
     val player = MediaPlayer()
     var songs = musicApi.getSongs()
-    private var _uiState = MutableStateFlow(
-        MusicPlayerUiState()
-    )
+    private var _uiState = MutableStateFlow(MusicPlayerUiState())
     val uiState = _uiState.asStateFlow()
 
     fun updateUiState(
@@ -45,10 +42,10 @@ class SongsRepository(context: Context) {
         Log.d("SongsRepository", "uiState = $uiState")
     }
 
-    fun saveState(context: Context) {
+    fun saveState(context: Context, killed: Boolean = false) {
         val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
         with (sp.edit()) {
-            putBoolean(KEY_IS_PLAYING, uiState.value.isPlaying)
+            putBoolean(KEY_IS_PLAYING, if (killed) false else uiState.value.isPlaying)
             putFloat(KEY_TIMESTAMP, uiState.value.timestamp)
             putInt(KEY_CURRENT_INDEX, uiState.value.currentIndex)
             putBoolean(KEY_IS_SHUFFLING, uiState.value.isShuffling)
@@ -61,5 +58,6 @@ class SongsRepository(context: Context) {
             putBoolean(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
             apply()
         }
+        Log.d("SongsRepository", "killed = $killed")
     }
 }

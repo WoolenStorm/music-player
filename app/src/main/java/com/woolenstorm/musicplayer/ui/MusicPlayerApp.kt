@@ -58,6 +58,7 @@ fun MusicPlayerApp(
                             song != viewModel.uiState.value.song -> {
                                 viewModel.cancel()
                                 viewModel.updateUiState(song = song)
+//                                Log.d("MusicPlayerApp", "player = ${viewModel.mediaPlayer.}")
                                 viewModel.play(context)
                             }
                         }

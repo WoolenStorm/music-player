@@ -2,9 +2,12 @@ package com.woolenstorm.musicplayer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple200 = Color(0xFFBB86FC)
-val Purple500 = Color(0xFF6200EE)
-val Purple700 = Color(0xFF3700B3)
 val Teal200 = Color(0xFF03DAC5)
-val White300 = Color(0xFFF2F3F5)
-val White200 = Color(0xFFF9FAFC)
+val Cocoa = Color(0xFF362217)
+val White25 = Color(0xFFF8EDE3)
+val White35 = Color(0xFFDFD3C3)
+val DirtyPurple = Color(0xFF85586F)
+val DarkChocolate = Color(0xFF1C0A00)
+val Chocolate = Color(0xFF361500)
+val Leather = Color(0xFFCC9544)
+val Peach = Color(0xFFFFE8AA)

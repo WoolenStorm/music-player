@@ -11,12 +11,15 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -24,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.graphics.toColor
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.woolenstorm.musicplayer.model.Song
@@ -44,7 +48,14 @@ fun SongDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
 
-    if (uiState.isPlaying) viewModel.startProgressSlider(SystemClock.elapsedRealtime())
+    if (uiState.isPlaying) viewModel.startProgressSlider()
+
+//    val palette = viewModel.palette
+//    val vibrant = palette?.getVibrantColor(MaterialTheme.colors.onSurface.toArgb())
+//    val vibrantColor = vibrant?.toColor() ?: MaterialTheme.colors.onSurface
+//    val muted = palette?.getMutedColor(MaterialTheme.colors.onSurface.toArgb())?.toColor() ?: MaterialTheme.colors.onSurface
+
+
 
 
     Surface(modifier = modifier.fillMaxSize()) {

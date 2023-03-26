@@ -1,10 +1,12 @@
 package com.woolenstorm.musicplayer.ui.screens
 
+import android.content.res.Resources.Theme
 import android.net.Uri
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +16,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -35,15 +38,8 @@ fun HomeScreen(
     onSongClicked: (Song) -> Unit = {},
     onOptionsClicked: (Song) -> Unit = {}
 ) {
-    Log.d("HomeScreen", songs.size.toString())
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
-//    val intent = Intent(context, MusicPlayerService::class.java)
-//    intent.putExtra(KEY_TITLE, uiState.value.song.title)
-//    intent.putExtra(KEY_ARTIST, uiState.value.song.artist)
-//    intent.putExtra(KEY_ARTWORK, uiState.value.song.albumArtworkUri)
-//    ContextCompat.startForegroundService(context, intent)
 
     Surface(
         modifier = modifier.fillMaxSize()
@@ -54,8 +50,9 @@ fun HomeScreen(
         ) {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(all = 8.dp)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(all = 8.dp),
+                verticalArrangement = Arrangement.Top
             ) {
                 items(songs) {
                     SongItem(
@@ -71,15 +68,14 @@ fun HomeScreen(
                     title = uiState.song.title,
                     artist = uiState.song.artist,
                     isPlaying = uiState.isPlaying,
-                    modifier = Modifier.background(Color(0xFFF9FAFC)),
-//                    uiState = uiState.value,
+                    modifier = Modifier
+                        .background(MaterialTheme.colors.primaryVariant),
                     onPause = { viewModel.pause(context) },
                     onContinue = { viewModel.continuePlaying(context) },
                     onPlayNext = { viewModel.nextSong(context) },
                     onPlayPrevious = { viewModel.previousSong(context) },
                     onSongClicked = {
                         viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
-//                        viewModel.startProgressSlider()
                     }
                 )
             }
@@ -100,6 +96,7 @@ fun SongItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(4.dp)
+//            .shadow(4.dp)
             .clickable(onClick = onSongClicked),
     ) {
         Row(
@@ -145,8 +142,12 @@ fun CurrentPlayingSong(
     onContinue: () -> Unit = {},
     onSongClicked: () -> Unit = {}
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().clickable { onSongClicked() },
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSongClicked() }
+//            .shadow(16.dp)
+        ,
         elevation = 4.dp,
     ) {
         Row(

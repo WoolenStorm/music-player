@@ -55,13 +55,6 @@ class PlaybackService : Service() {
         mediaSession.isActive = true
         Log.d("PlaybackService", "onCreate()!!!!!!!!!!!!!!!!")
 
-        mediaSession.setMetadata(
-            MediaMetadataCompat.Builder()
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "Artist")
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Title")
-                .build()
-        )
-
         mediaController = MediaControllerCompat(application, mediaSession)
         super.onCreate()
     }
@@ -69,15 +62,6 @@ class PlaybackService : Service() {
 //    private fun createIntent(action: String, )
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        val sp = application.getSharedPreferences("song_info", Context.MODE_PRIVATE)
-//        val title = sp.getString(KEY_TITLE, "<no title>") ?: "<no title>"
-//        val artist = sp.getString(KEY_ARTIST, "<unknown>") ?: "<unknown>"
-//        val isPlaying = sp.getBoolean(KEY_IS_PLAYING, false)
-//        val isShuffling = sp.getBoolean(KEY_IS_SHUFFLING, false)
-//        val artworkUri = Uri.parse(sp.getString(KEY_ALBUM_ARTWORK, "") ?: "")
-//        Log.d("PlaybackService", "artworkUri = $artworkUri")
-
-
 
         val closingIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "CLOSE")
         val nextSongIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "PLAY_NEXT")
@@ -85,6 +69,7 @@ class PlaybackService : Service() {
         val toggleIsPlayingIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "TOGGLE_IS_PLAYING")
         val toggleIsShufflingIntent = Intent("com.woolenstorm.musicplayer").putExtra("ACTION", "TOGGLE_IS_SHUFFLING")
         val activityIntent = Intent(application, MainActivity::class.java)
+        activityIntent.putExtra(KEY_IS_HOMESCREEN, false)
         val activityPendingIntent = androidx.core.app.TaskStackBuilder.create(application).run {
             addNextIntent(activityIntent)
             getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
@@ -128,6 +113,16 @@ class PlaybackService : Service() {
             getBitmapFromDrawable(applicationContext, R.drawable.album_artwork_placeholder)
         }
 
+        mediaSession.setMetadata(
+            MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, uiState.value.song.artist)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, uiState.value.song.title)
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, uiState.value.song.albumArtworkUri)
+                .build()
+        )
+
+
+
         val notification = Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_play)
             .setContentTitle(uiState.value.song.title)
@@ -139,7 +134,7 @@ class PlaybackService : Service() {
             .addAction(R.drawable.ic_next, "play_next", pendingNextSongIntent)
             .addAction(if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off, "shuffle", pendingToggleIsShufflingIntent)
             .addAction(R.drawable.baseline_close_24, "CLOSE", pendingClosingIntent)
-//            .setContentIntent(activityPendingIntent)
+            .setContentIntent(activityPendingIntent)
             .setPriority(PRIORITY_LOW)
             .setSilent(true)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_DEFERRED)
@@ -168,26 +163,27 @@ class PlaybackService : Service() {
         return channelId
     }
 
-    private fun getBitmapFromDrawable(ctx: Context, @DrawableRes drawableId: Int): Bitmap? {
-        var drawable = ContextCompat.getDrawable(ctx, drawableId)
-        drawable?.let {
-            drawable = (DrawableCompat.wrap(it)).mutate()
-            val bitmap = Bitmap.createBitmap(
-                it.intrinsicWidth,
-                it.intrinsicHeight,
-                Bitmap.Config.ARGB_8888
-            )
-
-            val canvas = Canvas(bitmap)
-            it.setBounds(0, 0, canvas.width, canvas.height)
-            it.draw(canvas)
-            return bitmap
-        }
-        return null
-    }
+//    private fun getBitmapFromDrawable(ctx: Context, @DrawableRes drawableId: Int): Bitmap? {
+//        var drawable = ContextCompat.getDrawable(ctx, drawableId)
+//        drawable?.let {
+//            drawable = (DrawableCompat.wrap(it)).mutate()
+//            val bitmap = Bitmap.createBitmap(
+//                it.intrinsicWidth,
+//                it.intrinsicHeight,
+//                Bitmap.Config.ARGB_8888
+//            )
+//
+//            val canvas = Canvas(bitmap)
+//            it.setBounds(0, 0, canvas.width, canvas.height)
+//            it.draw(canvas)
+//            return bitmap
+//        }
+//        return null
+//    }
 
     override fun onDestroy() {
         unregisterReceiver(receiver)
+        songsRepository.saveState(application, true)
         player.release()
     }
 }

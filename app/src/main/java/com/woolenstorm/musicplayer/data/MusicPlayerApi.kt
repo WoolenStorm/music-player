@@ -92,6 +92,7 @@ class DefaultMusicPlayerApi(private val context: Context) : MusicPlayerApi {
                 cursor.close()
             }
         }
+        Log.d(TAG, "songs found: ${list.size}")
         if (list.size >= 21) {
             Log.d(TAG, "songs found: ${list.size}")
             Log.d(TAG, "songs found: ${list[6].title}")

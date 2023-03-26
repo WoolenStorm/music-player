@@ -5,36 +5,38 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.SystemClock
+import android.provider.MediaStore
+//import android.support.v7.graphics.Palette
 import android.util.Log
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.woolenstorm.musicplayer.*
+import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import java.io.FileNotFoundException
 import kotlin.random.Random
 
 class AppViewModel(
     private val songsRepository: SongsRepository
 ) : ViewModel() {
 
-    val mediaPlayer = songsRepository.player
+    private val mediaPlayer = songsRepository.player
 
     val songs = songsRepository.songs
 
     val isShuffling = mutableStateOf(false)
-    val isSongChosen = mutableStateOf(false)
-    val isPlaying = mutableStateOf(false)
     val isHomeScreen = mutableStateOf(true)
-    val currentUri = mutableStateOf(Uri.EMPTY)
-    var currentIndex = 0
     val currentPosition = MutableStateFlow(mediaPlayer.currentPosition.toFloat())
     var job: Job? = null
+//    var palette: Palette? = null
 
 
     val uiState = songsRepository.uiState
@@ -61,30 +63,21 @@ class AppViewModel(
     }
 
     init {
-        startProgressSlider(SystemClock.elapsedRealtime())
+        startProgressSlider()
     }
 
-    fun startProgressSlider(startTime: Long) {
+    fun startProgressSlider() {
         job?.cancel()
         job = viewModelScope.launch {
             while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
-//                currentPosition.value = (SystemClock.elapsedRealtime() - uiState.value.playbackStarted).toFloat() + uiState.value.timestamp
                 currentPosition.value = mediaPlayer.currentPosition.toFloat()
                 delay(250)
-//                Log.d("AppViewModel", "currentPosition.value = ${currentPosition.value}")
-//                Log.d("AppViewModel", "mediaPlayer.currentPosition = ${mediaPlayer.currentPosition}")
             }
         }
     }
 
     fun onToggleShuffle(context: Context) {
         updateUiState(isShuffling = !uiState.value.isShuffling)
-
-//        val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
-//        with (sp.edit()) {
-//            putBoolean(KEY_IS_SHUFFLING, isShuffling.value)
-//            apply()
-//        }
         createNotification(context)
     }
 
@@ -96,8 +89,6 @@ class AppViewModel(
             song = songs[newIndex],
             currentIndex = newIndex
         )
-        Log.d("AppViewModel", "oldIndex = $currentIndex")
-        Log.d("AppViewModel", "uiState = ${uiState.value}")
         cancel()
         play(context)
     }
@@ -125,7 +116,21 @@ class AppViewModel(
 
     fun play(context: Context) {
 
+//        val artworkUri = Uri.parse(uiState.value.song.albumArtworkUri) ?: Uri.EMPTY
+//
+//        val bitmap = try {
+//            if (artworkUri != Uri.EMPTY) MediaStore.Images.Media.getBitmap(
+//                context.contentResolver,
+//                artworkUri
+//            )
+//            else getBitmapFromDrawable(context, R.drawable.album_artwork_placeholder)
+//        } catch (e: FileNotFoundException) {
+//            getBitmapFromDrawable(context, R.drawable.album_artwork_placeholder)
+//        }
+//        palette = bitmap?.let { Palette.from(it).generate() }
+
         cancel()
+        Log.d("AppViewModel", "uri = ${uiState.value.song.uri}, title = ${uiState.value.song.title}")
         mediaPlayer.apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
@@ -141,7 +146,7 @@ class AppViewModel(
             start()
         }
         updateUiState(isPlaying = true, playbackStarted = SystemClock.elapsedRealtime())
-        startProgressSlider(SystemClock.elapsedRealtime())
+        startProgressSlider()
         createNotification(context)
     }
 
@@ -177,18 +182,14 @@ class AppViewModel(
             seekTo(currPos)
             start()
         }
-//        mediaPlayer.prepare()
-//        mediaPlayer.start()
         updateUiState(isPlaying = true, playbackStarted = SystemClock.elapsedRealtime())
-        startProgressSlider(SystemClock.elapsedRealtime())
+        startProgressSlider()
         createNotification(context)
     }
 
     fun updateTimestamp(newTimestamp: Float) {
         updateUiState(timestamp = newTimestamp)
-//        currentPosition.value = newTimestamp
         mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
-//        startProgressSlider(SystemClock.elapsedRealtime())
     }
 
     companion object {

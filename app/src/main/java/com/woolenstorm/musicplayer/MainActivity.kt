@@ -11,7 +11,12 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.MyBroadcastReceiver
 import com.woolenstorm.musicplayer.model.Song
@@ -20,22 +25,11 @@ import com.woolenstorm.musicplayer.ui.screens.AppViewModel
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 
 class MainActivity : ComponentActivity() {
-//    private val shuffle = sp.getBoolean("IS_SHUFFLING", false)
 
-    private var isShuffling = false
-//    private var id: Long = 0
-    private var title = ""
-    private var artist = ""
-    private var isSongChosen = false
-    private var uri = Uri.EMPTY
-    private var index = 0
     private lateinit var songsRepository: SongsRepository
-//    private val apiService = DefaultMusicPlayerApi(this)
-    private lateinit var receiver: MyBroadcastReceiver
 
     private fun initializeApp() {
         songsRepository = (applicationContext as MusicPlayerApplication).container.songsRepository
-        val mediaPlayer = songsRepository.player
         val viewModel = AppViewModel(songsRepository)
 
         val sharedPreferences = getSharedPreferences("song_info", Context.MODE_PRIVATE)
@@ -54,32 +48,18 @@ class MainActivity : ComponentActivity() {
             isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false),
             isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false)
         )
+        viewModel.isHomeScreen.value = intent.getBooleanExtra(KEY_IS_HOMESCREEN, true)
 
-//        isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false)
-//        index = sharedPreferences.getInt(KEY_CURRENT_INDEX, 0)
-//        title = sharedPreferences.getString(KEY_TITLE, "") ?: "<no_title>"
-//        artist = sharedPreferences.getString(KEY_ARTIST, "") ?: "<unknown>"
-//        uri = Uri.parse(sharedPreferences.getString(KEY_URI, ""))
-//        Log.d("MainActivity", "onCreate(60): index = $index")
-
-//        isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false)
-        Log.d("MainActivity", "onCreate() uri = $uri")
-        Log.d("MainActivity", "onCreate() title = $title")
-
-
-//        viewModel.isShuffling.value = isShuffling
-//        viewModel.isSongChosen.value = isSongChosen
-//        viewModel.currentUri.value = uri
-//        viewModel.currentIndex = index
-        Log.d("MainActivity", "viewModel.currentUri = ${viewModel.currentUri.value}")
-//        viewModel.updateUiState(
-//            song = songsRepository.songs[index],
-//            isPlaying = mediaPlayer.isPlaying
-//        )
-        Log.d("MainActivity", "viewModel.uri = ${viewModel.uiState.value.song.uri}")
-
+        Log.d("MainActivity", "viewModel.uiState.isPlaying = ${viewModel.uiState.value.isPlaying}")
         setContent {
             MusicPlayerTheme {
+                val systemUiController = rememberSystemUiController()
+                val statusBarColor = if (isSystemInDarkTheme()) Color(0xFF1C0A00) else  Color(0xFFF8EDE3)
+                SideEffect {
+                    systemUiController.setSystemBarsColor(
+                        color = statusBarColor
+                    )
+                }
                 MusicPlayerApp(
                     viewModel = viewModel,
                     activity = this
@@ -87,7 +67,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,6 +84,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         val permission = if (Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO else android.Manifest.permission.READ_EXTERNAL_STORAGE
+
         when (PackageManager.PERMISSION_GRANTED) {
             ContextCompat.checkSelfPermission(
                 applicationContext,
@@ -120,8 +100,8 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        Log.d("MainActivity", "onConfigurationChanged()")
-    }
+//    override fun onConfigurationChanged(newConfig: Configuration) {
+//        super.onConfigurationChanged(newConfig)
+//        Log.d("MainActivity", "onConfigurationChanged()")
+//    }
 }
