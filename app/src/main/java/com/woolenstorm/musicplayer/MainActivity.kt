@@ -50,7 +50,6 @@ class MainActivity : ComponentActivity() {
         )
         viewModel.isHomeScreen.value = intent.getBooleanExtra(KEY_IS_HOMESCREEN, true)
 
-        Log.d("MainActivity", "viewModel.uiState.isPlaying = ${viewModel.uiState.value.isPlaying}")
         setContent {
             MusicPlayerTheme {
                 val systemUiController = rememberSystemUiController()
@@ -98,10 +97,4 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         songsRepository.saveState(this)
     }
-
-
-//    override fun onConfigurationChanged(newConfig: Configuration) {
-//        super.onConfigurationChanged(newConfig)
-//        Log.d("MainActivity", "onConfigurationChanged()")
-//    }
 }

@@ -5,21 +5,16 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.net.Uri
-import android.os.SystemClock
 import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,9 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.graphics.toColor
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
@@ -41,22 +34,12 @@ fun SongDetailsScreen(
     viewModel: AppViewModel,
     modifier: Modifier = Modifier
 ) {
-    BackHandler {
-        viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
-    }
+    BackHandler { viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value }
 
     val uiState by viewModel.uiState.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
 
     if (uiState.isPlaying) viewModel.startProgressSlider()
-
-//    val palette = viewModel.palette
-//    val vibrant = palette?.getVibrantColor(MaterialTheme.colors.onSurface.toArgb())
-//    val vibrantColor = vibrant?.toColor() ?: MaterialTheme.colors.onSurface
-//    val muted = palette?.getMutedColor(MaterialTheme.colors.onSurface.toArgb())?.toColor() ?: MaterialTheme.colors.onSurface
-
-
-
 
     Surface(modifier = modifier.fillMaxSize()) {
         Column(
@@ -70,10 +53,7 @@ fun SongDetailsScreen(
             Spacer(modifier = Modifier.height(24.dp))
             SongTitleRow(uiState.song)
             IconButton(
-                onClick = {
-                    viewModel.onToggleShuffle(context)
-                    Log.d("SongDetailsScreen", "${viewModel.isShuffling.value}")
-                }
+                onClick = { viewModel.onToggleShuffle(context) }
             ) {
                 Icon(
                     painter = painterResource(
@@ -118,12 +98,6 @@ fun AlbumArtwork(
     } ?: BitmapFactory.decodeResource(context.resources, R.drawable.album_artwork_placeholder)
 
     Box(modifier = modifier.aspectRatio(1f)) {
-
-//        Image(
-//            painter = painterResource(id = R.drawable.album_artwork_placeholder),
-//            contentDescription = null,
-//            modifier = Modifier.fillMaxSize()
-//        )
         Image(
             bitmap = source.asImageBitmap(),
             contentDescription = null,
@@ -218,10 +192,6 @@ fun SongProgressSlider(
         val minutesTotal = kotlin.math.floor(duration / 60000).toInt()
         val secondsPlayed = kotlin.math.floor((value - minutesPlayed * 60000) / 1000).toInt()
         val secondsTotal = kotlin.math.floor((duration - minutesTotal * 60000) / 1000).toInt()
-
-//        Log.d("SongDetailsScreen", "duration = $duration")
-//        Log.d("SongDetailsScreen", "minutesTotal = $minutesTotal")
-
         Text(
             text = "$minutesPlayed:${if (secondsPlayed >= 10) secondsPlayed else "0$secondsPlayed"}",
             style = MaterialTheme.typography.caption
@@ -268,7 +238,6 @@ fun AlbumArtworkPreview() {
 fun SongTitleRowPreview() {
     MusicPlayerTheme {
         SongTitleRow(
-//            detailsScreenState = DetailsScreenState()
             song = Song(
                 uri = Uri.EMPTY,
                 id = 0,
@@ -289,10 +258,11 @@ fun ActionButtonsRowPreview() {
     MusicPlayerTheme {
         ActionButtonsRow(
             isPlaying = true,
-            onPause = { { /*TODO*/ } },
-            onContinuePlaying = { { /*TODO*/ } },
-            onPlayPrevious = { { /*TODO*/ } },
-            onPlayNext = { { /*TODO*/ } })
+            onPause = { },
+            onContinuePlaying = { },
+            onPlayPrevious = { },
+            onPlayNext = { }
+        )
     }
 }
 

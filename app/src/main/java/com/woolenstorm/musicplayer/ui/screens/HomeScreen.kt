@@ -1,12 +1,8 @@
 package com.woolenstorm.musicplayer.ui.screens
 
-import android.content.res.Resources.Theme
 import android.net.Uri
-import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,8 +12,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,44 +38,44 @@ fun HomeScreen(
     Surface(
         modifier = modifier.fillMaxSize()
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(all = 8.dp),
-                verticalArrangement = Arrangement.Top
+        Column() {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
             ) {
-                items(songs) {
-                    SongItem(
-                        song = it,
-                        onSongClicked = { onSongClicked(it) },
-                        onOptionsClicked = { onOptionsClicked(it) }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(all = 8.dp),
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    items(songs) {
+                        SongItem(
+                            song = it,
+                            onSongClicked = { onSongClicked(it) },
+                            onOptionsClicked = { onOptionsClicked(it) }
+                        )
+                        Divider()
+                    }
+                }
+                if (uiState.isSongChosen) {
+                    CurrentPlayingSong(
+                        title = uiState.song.title,
+                        artist = uiState.song.artist,
+                        isPlaying = uiState.isPlaying,
+                        modifier = Modifier
+                            .background(MaterialTheme.colors.primaryVariant),
+                        onPause = { viewModel.pause(context) },
+                        onContinue = { viewModel.continuePlaying(context) },
+                        onPlayNext = { viewModel.nextSong(context) },
+                        onPlayPrevious = { viewModel.previousSong(context) },
+                        onSongClicked = {
+                            viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
+                        }
                     )
-                    Divider()
                 }
             }
-            AnimatedVisibility(visible = uiState.isSongChosen) {
-                CurrentPlayingSong(
-                    title = uiState.song.title,
-                    artist = uiState.song.artist,
-                    isPlaying = uiState.isPlaying,
-                    modifier = Modifier
-                        .background(MaterialTheme.colors.primaryVariant),
-                    onPause = { viewModel.pause(context) },
-                    onContinue = { viewModel.continuePlaying(context) },
-                    onPlayNext = { viewModel.nextSong(context) },
-                    onPlayPrevious = { viewModel.previousSong(context) },
-                    onSongClicked = {
-                        viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
-                    }
-                )
-            }
-//            Log.d("HomeScreen", "isSongChosen.value = ${isSongChosen.value}")
         }
-
     }
 }
 
@@ -131,7 +125,6 @@ fun SongItem(
 
 @Composable
 fun CurrentPlayingSong(
-//    uiState: MusicPlayerUiState,
     title: String,
     artist: String,
     isPlaying: Boolean,
@@ -262,12 +255,9 @@ fun HomeScreenPreview() {
                 albumId = 0
             )
         )
-        val songChosen = remember { mutableStateOf(false) }
-        val isShuffling = remember { mutableStateOf(false) }
         HomeScreen(
             songs = songs,
-            viewModel = viewModel(factory = AppViewModel.factory),
-//            isSongChosen = songChosen
+            viewModel = viewModel(factory = AppViewModel.factory)
         )
     }
 }
