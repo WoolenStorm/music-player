@@ -56,8 +56,7 @@ fun SongDetailsScreen(
                     painter = painterResource(
                         id = if (uiState.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
                     ),
-                    contentDescription = stringResource(
-                        id = if (uiState.isShuffling) R.string.shuffle_on else R.string.shuffle_off)
+                    contentDescription = stringResource(id = R.string.toggle_is_shuffling)
                 )
             }
             SongProgressSlider(
@@ -168,9 +167,7 @@ fun ActionButtonsRow(
                     painter = painterResource(
                         if (isPlaying) R.drawable.pause_circle else R.drawable.play_circle
                     ),
-                    contentDescription = stringResource(
-                        id = if (isPlaying) R.string.pause else R.string.play
-                    ),
+                    contentDescription = stringResource(id = R.string.toggle_is_playing),
                     modifier = Modifier.size(64.dp)
                 )
             }

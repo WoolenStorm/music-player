@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MusicPlayerTheme {
                 val systemUiController = rememberSystemUiController()
-                val statusBarColor = if (isSystemInDarkTheme()) Color(R.color.dark_chocolate) else  Color(R.color.white_25)
+                val statusBarColor = if (isSystemInDarkTheme()) Color(0xFF1C0A00) else Color(0xFFF8EDE3)
                 SideEffect {
                     systemUiController.setSystemBarsColor(
                         color = statusBarColor

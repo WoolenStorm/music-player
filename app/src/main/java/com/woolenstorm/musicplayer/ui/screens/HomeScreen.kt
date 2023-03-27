@@ -2,7 +2,9 @@ package com.woolenstorm.musicplayer.ui.screens
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -143,6 +145,7 @@ fun SongItem(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CurrentPlayingSong(
     title: String,
@@ -169,7 +172,12 @@ fun CurrentPlayingSong(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = title, fontSize = 14.sp, style = MaterialTheme.typography.h6)
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.basicMarquee()
+                )
                 Text(text = artist, fontSize = 10.sp, style = MaterialTheme.typography.subtitle1)
             }
 
@@ -186,9 +194,7 @@ fun CurrentPlayingSong(
                     painter = painterResource(
                         id = if (isPlaying) R.drawable.pause_circle else R.drawable.play_circle
                     ),
-                    contentDescription = stringResource(
-                        id = if (isPlaying) R.string.pause else R.string.play
-                    )
+                    contentDescription = stringResource(id = R.string.toggle_is_playing)
                 )
             }
 
