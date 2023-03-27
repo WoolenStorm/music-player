@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -87,22 +88,29 @@ fun AlbumArtwork(
 ) {
     val artworkUri = Uri.parse(artworkUriString)
     val context = LocalContext.current.applicationContext
-    val source = try {
-        if (artworkUri != Uri.EMPTY) MediaStore.Images.Media.getBitmap(
-            context.contentResolver,
-            artworkUri
-        )
-        else getBitmapFromDrawable(context, R.drawable.album_artwork_placeholder)
-    } catch (e: FileNotFoundException) {
-        getBitmapFromDrawable(context, R.drawable.album_artwork_placeholder)
-    } ?: BitmapFactory.decodeResource(context.resources, R.drawable.album_artwork_placeholder)
 
     Box(modifier = modifier.aspectRatio(1f)) {
-        Image(
-            bitmap = source.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize()
-        )
+        val source = try {
+            MediaStore.Images.Media.getBitmap(
+                context.contentResolver,
+                artworkUri
+            )
+        } catch (e: FileNotFoundException) {
+            null
+        }
+        if (source != null) {
+            Image(
+                bitmap = source.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Icon(
+                painter = painterResource(id = R.drawable.album_artwork_placeholder),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 
 }

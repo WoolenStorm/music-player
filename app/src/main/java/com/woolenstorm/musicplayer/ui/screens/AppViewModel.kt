@@ -21,6 +21,7 @@ import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import java.io.File
 import java.io.FileNotFoundException
 import kotlin.random.Random
 
@@ -72,6 +73,24 @@ class AppViewModel(
             while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
                 currentPosition.value = mediaPlayer.currentPosition.toFloat()
                 delay(250)
+            }
+        }
+    }
+
+    fun deleteSong(song: Song?, context: Context) {
+        Log.d("AppViewModel", "song = $song")
+        if (song != null) {
+            val fileToDelete = song.uri.path?.let { File(it) }
+            if (fileToDelete?.exists() == true) {
+                fileToDelete.canonicalFile.delete()
+                if (fileToDelete.exists()) {
+                    context.applicationContext.deleteFile(fileToDelete.name)
+                    Log.d("AppViewModel", "file deleted: ${song.uri.path}")
+                } else {
+                    Log.d("AppViewModel", "file not deleted: ${song.uri.path}")
+                }
+            } else {
+                Log.d("AppViewModel", "file does not exist: ${fileToDelete}")
             }
         }
     }

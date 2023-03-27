@@ -84,12 +84,18 @@ class MainActivity : ComponentActivity() {
         }
         val permission = if (Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO else android.Manifest.permission.READ_EXTERNAL_STORAGE
 
-        when (PackageManager.PERMISSION_GRANTED) {
+        when {
             ContextCompat.checkSelfPermission(
                 applicationContext,
                 permission
-            ) -> initializeApp()
-            else -> requestPermissionLauncher.launch(permission)
+            ) == PackageManager.PERMISSION_GRANTED
+//                    && ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                    == PackageManager.PERMISSION_GRANTED
+            -> initializeApp()
+            else -> {
+                requestPermissionLauncher.launch(permission)
+//                requestPermissions(arrayOf(permission, android.Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
+            }
         }
     }
 

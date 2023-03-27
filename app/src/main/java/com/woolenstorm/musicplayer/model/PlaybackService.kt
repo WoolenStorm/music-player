@@ -14,6 +14,7 @@ import android.provider.MediaStore
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.KeyEvent
 import androidx.annotation.DrawableRes
@@ -21,6 +22,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat.*
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+//import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.MusicPlayerApi
 import com.woolenstorm.musicplayer.data.SongsRepository
@@ -35,6 +37,7 @@ class PlaybackService : Service() {
     private lateinit var receiver: MyBroadcastReceiver
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaController: MediaControllerCompat
+//    private lateinit var mediaSessionConnector: MediaSessionConnector
     private lateinit var musicApi: MusicPlayerApi
     private lateinit var songs: List<Song>
     private lateinit var songsRepository: SongsRepository
@@ -54,12 +57,20 @@ class PlaybackService : Service() {
         mediaSession = MediaSessionCompat(application, "tag")
         mediaSession.isActive = true
         Log.d("PlaybackService", "onCreate()!!!!!!!!!!!!!!!!")
-
+        val mStateBuilder = PlaybackStateCompat.Builder()
+            .setActions(
+                PlaybackStateCompat.ACTION_PLAY or
+                PlaybackStateCompat.ACTION_PAUSE or
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                PlaybackStateCompat.ACTION_PLAY_PAUSE
+            )
+        mediaSession.setPlaybackState(mStateBuilder.build())
         mediaController = MediaControllerCompat(application, mediaSession)
+//        mediaSessionConnector = MediaSessionConnector(mediaSession)
         super.onCreate()
     }
 
-//    private fun createIntent(action: String, )
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
@@ -84,12 +95,23 @@ class PlaybackService : Service() {
         val pendingToggleIsShufflingIntent = PendingIntent.getBroadcast(application, 4, toggleIsShufflingIntent, flag)
 
         mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-            override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
-                val keyEvent: KeyEvent? = mediaButtonEvent?.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
-                keyEvent?.let {
-                    if (keyEvent.action == KeyEvent.ACTION_UP) sendBroadcast(toggleIsPlayingIntent)
-                }
-                return true
+            override fun onPlay() {
+                super.onPlay()
+                sendBroadcast(toggleIsPlayingIntent)
+            }
+//
+            override fun onPause() {
+                super.onPause()
+                sendBroadcast(toggleIsPlayingIntent)
+            }
+            override fun onSkipToNext() {
+                super.onSkipToNext()
+                sendBroadcast(nextSongIntent)
+            }
+
+            override fun onSkipToPrevious() {
+                super.onSkipToPrevious()
+                sendBroadcast(prevSongIntent)
             }
         })
 
@@ -120,7 +142,6 @@ class PlaybackService : Service() {
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, uiState.value.song.albumArtworkUri)
                 .build()
         )
-
 
 
         val notification = Builder(this, CHANNEL_ID)

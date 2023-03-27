@@ -1,6 +1,7 @@
 package com.woolenstorm.musicplayer.ui.screens
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -34,11 +35,27 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var dialogOpen by remember { mutableStateOf(false) }
+    var songToDelete by remember { mutableStateOf<Song?>(null) }
+
+    if (dialogOpen) {
+        AlertDialog(
+            onDismissRequest = { dialogOpen = false },
+            confirmButton = { TextButton(onClick = {
+                viewModel.deleteSong(songToDelete, context)
+                Log.d("HomeScreen", "deleteSong(${songToDelete?.title})")
+                dialogOpen = false
+            }) { Text(text = "Delete")} },
+            dismissButton = { TextButton(onClick = { dialogOpen = false }) { Text(text = "Cancel")} },
+            title = { Text("Delete this song?")},
+            text = { Text("It will be deleted permanently")}
+        )
+    }
 
     Surface(
         modifier = modifier.fillMaxSize()
     ) {
-        Column() {
+        Column {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.BottomCenter
@@ -53,7 +70,12 @@ fun HomeScreen(
                         SongItem(
                             song = it,
                             onSongClicked = { onSongClicked(it) },
-                            onOptionsClicked = { onOptionsClicked(it) }
+                            onOptionsClicked = {
+                                onOptionsClicked(it)
+                                songToDelete = it
+                                Log.d("HomeScreen", "onOptionsClicked(${it.title})")
+                                dialogOpen = true
+                            }
                         )
                         Divider()
                     }
@@ -64,7 +86,9 @@ fun HomeScreen(
                         artist = uiState.song.artist,
                         isPlaying = uiState.isPlaying,
                         modifier = Modifier
-                            .background(MaterialTheme.colors.primaryVariant),
+                            .background(MaterialTheme.colors.primaryVariant)
+                            .align(Alignment.BottomCenter)
+                        ,
                         onPause = { viewModel.pause(context) },
                         onContinue = { viewModel.continuePlaying(context) },
                         onPlayNext = { viewModel.nextSong(context) },
@@ -90,7 +114,6 @@ fun SongItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(4.dp)
-//            .shadow(4.dp)
             .clickable(onClick = onSongClicked),
     ) {
         Row(
