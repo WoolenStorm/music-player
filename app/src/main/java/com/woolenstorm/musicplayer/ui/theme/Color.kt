@@ -2,7 +2,6 @@ package com.woolenstorm.musicplayer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Teal200 = Color(0xFF03DAC5)
 val Cocoa = Color(0xFF362217)
 val White25 = Color(0xFFF8EDE3)
 val White35 = Color(0xFFDFD3C3)

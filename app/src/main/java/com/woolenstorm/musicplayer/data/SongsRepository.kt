@@ -2,7 +2,6 @@ package com.woolenstorm.musicplayer.data
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.util.Log
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Song
@@ -39,11 +38,10 @@ class SongsRepository(context: Context) {
                 playbackStarted = playbackStarted ?: uiState.value.playbackStarted
             )
         }
-        Log.d("SongsRepository", "uiState = $uiState")
     }
 
     fun saveState(context: Context, killed: Boolean = false) {
-        val sp = context.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+        val sp = context.getSharedPreferences(KEY_SONG_INFO_FILE, Context.MODE_PRIVATE)
         with (sp.edit()) {
             putBoolean(KEY_IS_PLAYING, if (killed) false else uiState.value.isPlaying)
             putFloat(KEY_TIMESTAMP, uiState.value.timestamp)
@@ -58,6 +56,5 @@ class SongsRepository(context: Context) {
             putBoolean(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
             apply()
         }
-        Log.d("SongsRepository", "killed = $killed")
     }
 }

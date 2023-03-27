@@ -1,15 +1,13 @@
 package com.woolenstorm.musicplayer.ui.screens
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -21,8 +19,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
@@ -115,15 +111,25 @@ fun AlbumArtwork(
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongTitleRow(
     song: Song,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(text = song.title, style = MaterialTheme.typography.h5, maxLines = 1)
+        Text(
+            text = song.title,
+            style = MaterialTheme.typography.h5,
+            maxLines = 1,
+            modifier = Modifier.basicMarquee()
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = song.artist, style = MaterialTheme.typography.body1)
+        Text(
+            text = song.artist,
+            style = MaterialTheme.typography.body1,
+            modifier = Modifier.basicMarquee()
+        )
     }
 }
 
@@ -224,7 +230,6 @@ fun SongProgressSlider(
 @Preview(showBackground = true)
 @Composable
 fun SongDetailsScreenPreview() {
-//    val isShuffling = remember { mutableStateOf(false) }
     MusicPlayerTheme {
         SongDetailsScreen(
             viewModel = viewModel(factory = AppViewModel.factory),
@@ -284,22 +289,4 @@ fun SongProgressSliderPreview() {
             onValueChange = { }
         )
     }
-}
-
-private fun getBitmapFromDrawable(ctx: Context, @DrawableRes drawableId: Int): Bitmap? {
-    var drawable = ContextCompat.getDrawable(ctx, drawableId)
-    drawable?.let {
-        drawable = (DrawableCompat.wrap(it)).mutate()
-        val bitmap = Bitmap.createBitmap(
-            it.intrinsicWidth,
-            it.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        )
-
-        val canvas = Canvas(bitmap)
-        it.setBounds(0, 0, canvas.width, canvas.height)
-        it.draw(canvas)
-        return bitmap
-    }
-    return null
 }

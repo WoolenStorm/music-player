@@ -94,20 +94,8 @@ class DefaultMusicPlayerApi(private val context: Context) : MusicPlayerApi {
         }
         Log.d(TAG, "songs found: ${list.size}")
         if (list.size >= 21) {
-            Log.d(TAG, "songs found: ${list.size}")
-            Log.d(TAG, "songs found: ${list[6].title}")
-            Log.d(TAG, "songs found: ${list[6].artist}")
-            Log.d(TAG, "songs found: ${list[6].album}")
-            Log.d(TAG, "songs found: ${list[6].albumId}")
-            Log.d(TAG, "songs found: ${list[6].path}")
-            Log.d(TAG, "songs found: ${list.size}")
-            Log.d(TAG, "songs found: ${list[7].title}")
-            Log.d(TAG, "songs found: ${list[7].artist}")
-            Log.d(TAG, "songs found: ${list[7].album}")
-            Log.d(TAG, "songs found: ${list[7].albumId}")
-            Log.d(TAG, "songs found: ${list[7].path}")
             (0..20).forEach {
-                Log.d(TAG, "albumArtworkUri: ${list[it].albumArtworkUri}")
+                Log.d(TAG, "albumArtworkUri: ${list[it].artist} - ${list[it].title}")
             }
         }
         return list

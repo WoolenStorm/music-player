@@ -87,15 +87,12 @@ fun HomeScreen(
                         isPlaying = uiState.isPlaying,
                         modifier = Modifier
                             .background(MaterialTheme.colors.primaryVariant)
-                            .align(Alignment.BottomCenter)
-                        ,
+                            .align(Alignment.BottomCenter),
                         onPause = { viewModel.pause(context) },
                         onContinue = { viewModel.continuePlaying(context) },
                         onPlayNext = { viewModel.nextSong(context) },
                         onPlayPrevious = { viewModel.previousSong(context) },
-                        onSongClicked = {
-                            viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
-                        }
+                        onSongClicked = { viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value }
                     )
                 }
             }
@@ -161,9 +158,7 @@ fun CurrentPlayingSong(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSongClicked() }
-//            .shadow(16.dp)
-        ,
+            .clickable { onSongClicked() },
         elevation = 4.dp,
     ) {
         Row(

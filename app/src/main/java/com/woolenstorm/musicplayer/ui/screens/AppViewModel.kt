@@ -3,45 +3,27 @@ package com.woolenstorm.musicplayer.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.net.Uri
-import android.os.SystemClock
-import android.provider.MediaStore
-//import android.support.v7.graphics.Palette
-import android.util.Log
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.woolenstorm.musicplayer.*
-import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.io.File
-import java.io.FileNotFoundException
 import kotlin.random.Random
 
-class AppViewModel(
-    private val songsRepository: SongsRepository
-) : ViewModel() {
+class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     private val mediaPlayer = songsRepository.player
-
     val songs = songsRepository.songs
-
-    val isShuffling = mutableStateOf(false)
     val isHomeScreen = mutableStateOf(true)
     val currentPosition = MutableStateFlow(mediaPlayer.currentPosition.toFloat())
     var job: Job? = null
-//    var palette: Palette? = null
-
-
     val uiState = songsRepository.uiState
-
 
     fun updateUiState(
         song: Song? = null,
@@ -78,21 +60,21 @@ class AppViewModel(
     }
 
     fun deleteSong(song: Song?, context: Context) {
-        Log.d("AppViewModel", "song = $song")
-        if (song != null) {
-            val fileToDelete = song.uri.path?.let { File(it) }
-            if (fileToDelete?.exists() == true) {
-                fileToDelete.canonicalFile.delete()
-                if (fileToDelete.exists()) {
-                    context.applicationContext.deleteFile(fileToDelete.name)
-                    Log.d("AppViewModel", "file deleted: ${song.uri.path}")
-                } else {
-                    Log.d("AppViewModel", "file not deleted: ${song.uri.path}")
-                }
-            } else {
-                Log.d("AppViewModel", "file does not exist: ${fileToDelete}")
-            }
-        }
+//        Log.d("AppViewModel", "song = $song")
+//        if (song != null) {
+//            val fileToDelete = song.uri.path?.let { File(it) }
+//            if (fileToDelete?.exists() == true) {
+//                fileToDelete.canonicalFile.delete()
+//                if (fileToDelete.exists()) {
+//                    context.applicationContext.deleteFile(fileToDelete.name)
+//                    Log.d("AppViewModel", "file deleted: ${song.uri.path}")
+//                } else {
+//                    Log.d("AppViewModel", "file not deleted: ${song.uri.path}")
+//                }
+//            } else {
+//                Log.d("AppViewModel", "file does not exist: ${fileToDelete}")
+//            }
+//        }
     }
 
     fun onToggleShuffle(context: Context) {
@@ -134,22 +116,7 @@ class AppViewModel(
     }
 
     fun play(context: Context) {
-
-//        val artworkUri = Uri.parse(uiState.value.song.albumArtworkUri) ?: Uri.EMPTY
-//
-//        val bitmap = try {
-//            if (artworkUri != Uri.EMPTY) MediaStore.Images.Media.getBitmap(
-//                context.contentResolver,
-//                artworkUri
-//            )
-//            else getBitmapFromDrawable(context, R.drawable.album_artwork_placeholder)
-//        } catch (e: FileNotFoundException) {
-//            getBitmapFromDrawable(context, R.drawable.album_artwork_placeholder)
-//        }
-//        palette = bitmap?.let { Palette.from(it).generate() }
-
         cancel()
-        Log.d("AppViewModel", "uri = ${uiState.value.song.uri}, title = ${uiState.value.song.title}")
         mediaPlayer.apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
@@ -157,14 +124,12 @@ class AppViewModel(
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build()
             )
-            setOnCompletionListener {
-                nextSong(context)
-            }
+            setOnCompletionListener { nextSong(context) }
             setDataSource(context, uiState.value.song.uri)
             prepare()
             start()
         }
-        updateUiState(isPlaying = true, playbackStarted = SystemClock.elapsedRealtime())
+        updateUiState(isPlaying = true)
         startProgressSlider()
         createNotification(context)
     }
@@ -175,7 +140,6 @@ class AppViewModel(
     }
 
     fun pause(context: Context) {
-
         mediaPlayer.pause()
         createNotification(context)
         updateUiState(isPlaying = false)
@@ -193,15 +157,13 @@ class AppViewModel(
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build()
             )
-            setOnCompletionListener {
-                nextSong(context)
-            }
+            setOnCompletionListener { nextSong(context) }
             setDataSource(context, uiState.value.song.uri)
             prepare()
             seekTo(currPos)
             start()
         }
-        updateUiState(isPlaying = true, playbackStarted = SystemClock.elapsedRealtime())
+        updateUiState(isPlaying = true)
         startProgressSlider()
         createNotification(context)
     }

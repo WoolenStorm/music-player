@@ -5,17 +5,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.net.Uri
-import android.util.Log
-import androidx.compose.animation.core.updateTransition
 import androidx.core.content.ContextCompat
 import com.woolenstorm.musicplayer.*
-import kotlinx.coroutines.delay
 import kotlin.random.Random
 import kotlin.system.exitProcess
-
-
-private const val TAG = "MyBroadcastReceiver"
 
 class MyBroadcastReceiver(private val application: Application) : BroadcastReceiver() {
 
@@ -25,17 +18,17 @@ class MyBroadcastReceiver(private val application: Application) : BroadcastRecei
     private val uiState = songsRepository.uiState
 
     override fun onReceive(context: Context?, intent: Intent) {
-        when (intent.getStringExtra("ACTION") ?: "") {
-            "CLOSE" -> {
+        when (intent.getStringExtra(KEY_ACTION) ?: "") {
+            ACTION_CLOSE -> {
                 songsRepository.saveState(application, true)
                 Thread.sleep(250)
                 exitProcess(0)
             }
-            "PLAY" -> play()
-            "PLAY_PREVIOUS" -> prevSong()
-            "PLAY_NEXT" -> nextSong()
-            "TOGGLE_IS_PLAYING" -> if (player.isPlaying) pause() else continuePlaying()
-            "TOGGLE_IS_SHUFFLING" -> onToggleShuffle()
+            ACTION_PLAY -> play()
+            ACTION_PLAY_PREVIOUS -> prevSong()
+            ACTION_PLAY_NEXT -> nextSong()
+            ACTION_TOGGLE_IS_PLAYING -> if (player.isPlaying) pause() else continuePlaying()
+            ACTION_TOGGLE_IS_SHUFFLING -> onToggleShuffle()
         }
     }
 
@@ -82,9 +75,7 @@ class MyBroadcastReceiver(private val application: Application) : BroadcastRecei
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build()
             )
-            setOnCompletionListener {
-                nextSong()
-            }
+            setOnCompletionListener { nextSong() }
             setDataSource(application, uiState.value.song.uri)
             prepare()
             start()
@@ -105,7 +96,7 @@ class MyBroadcastReceiver(private val application: Application) : BroadcastRecei
     }
 
     private fun createNotification() {
-        val sp = application.getSharedPreferences("song_info", Context.MODE_PRIVATE)
+        val sp = application.getSharedPreferences(KEY_SONG_INFO_FILE, Context.MODE_PRIVATE)
         with (sp.edit()) {
             putString(KEY_URI, songsRepository.uiState.value.song.uri.toString())
             putString(KEY_ARTIST, songsRepository.uiState.value.song.artist)
@@ -116,5 +107,4 @@ class MyBroadcastReceiver(private val application: Application) : BroadcastRecei
         val intent = Intent(application, PlaybackService::class.java)
         ContextCompat.startForegroundService(application, intent)
     }
-
 }

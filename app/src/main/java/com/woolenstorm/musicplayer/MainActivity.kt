@@ -2,23 +2,19 @@ package com.woolenstorm.musicplayer
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.woolenstorm.musicplayer.data.SongsRepository
-import com.woolenstorm.musicplayer.model.MyBroadcastReceiver
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.MusicPlayerApp
 import com.woolenstorm.musicplayer.ui.screens.AppViewModel
@@ -32,13 +28,13 @@ class MainActivity : ComponentActivity() {
         songsRepository = (applicationContext as MusicPlayerApplication).container.songsRepository
         val viewModel = AppViewModel(songsRepository)
 
-        val sharedPreferences = getSharedPreferences("song_info", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(KEY_SONG_INFO_FILE, Context.MODE_PRIVATE)
         viewModel.updateUiState(
             song = Song(
                 uri = Uri.parse(sharedPreferences.getString(KEY_URI, "") ?: "") ?: Uri.EMPTY,
                 duration = sharedPreferences.getFloat(KEY_DURATION, 0f),
-                title = sharedPreferences.getString(KEY_TITLE, "<no_title>") ?: "<no_title>",
-                artist = sharedPreferences.getString(KEY_ARTIST, "<unknown>") ?: "<unknown>",
+                title = sharedPreferences.getString(KEY_TITLE, getString(R.string.unknown_title)) ?: getString(R.string.unknown_title),
+                artist = sharedPreferences.getString(KEY_ARTIST, getString(R.string.unknown_artist)) ?: getString(R.string.unknown_artist),
                 album = sharedPreferences.getString(KEY_ALBUM, "") ?: "",
                 albumArtworkUri = sharedPreferences.getString(KEY_ALBUM_ARTWORK, "") ?: ""
             ),
@@ -53,7 +49,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MusicPlayerTheme {
                 val systemUiController = rememberSystemUiController()
-                val statusBarColor = if (isSystemInDarkTheme()) Color(0xFF1C0A00) else  Color(0xFFF8EDE3)
+                val statusBarColor = if (isSystemInDarkTheme()) Color(R.color.dark_chocolate) else  Color(R.color.white_25)
                 SideEffect {
                     systemUiController.setSystemBarsColor(
                         color = statusBarColor
@@ -78,7 +74,7 @@ class MainActivity : ComponentActivity() {
                 initializeApp()
             } else {
                 Toast
-                    .makeText(this, "Cannot access your songs :(", Toast.LENGTH_SHORT)
+                    .makeText(this, getString(R.string.no_permission_given), Toast.LENGTH_SHORT)
                     .show()
             }
         }

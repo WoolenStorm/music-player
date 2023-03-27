@@ -1,7 +1,6 @@
 package com.woolenstorm.musicplayer.ui
 
 import android.app.Activity
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -33,7 +32,6 @@ fun MusicPlayerApp(
                 viewModel = viewModel,
                 songs = viewModel.songs,
                 onSongClicked = { song ->
-                    Log.d("MusicPlayerApp", "song = ${song.title} - ${song.artist} (${song.path})")
                     viewModel.updateUiState(
                         currentIndex = viewModel.songs.indexOf(song),
                         isSongChosen = true

@@ -2,9 +2,11 @@
     <string name="app_name">Music Player</string>
     <string name="options">Options</string>
     <string name="play_previous">Play previous song</string>
-    <string name="play">Play current song</string>
     <string name="play_next">Play next song</string>
-    <string name="pause">Pause</string>
-    <string name="shuffle_on">Disable shuffle</string>
-    <string name="shuffle_off">Enable shuffle</string>
+    <string name="toggle_is_shuffling">toggle is shuffling</string>
+    <string name="unknown_artist">/unknown artist/</string>
+    <string name="unknown_title">/no title/</string>
+    <string name="toggle_is_playing">toggle is playing</string>
+    <string name="close">close the app</string>
+    <string name="no_permission_given">Cannot access your songs :(</string>
 </resources>

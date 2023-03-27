@@ -2,11 +2,8 @@ package com.woolenstorm.musicplayer
 
 import android.app.Application
 import android.content.pm.PackageManager
-import android.media.MediaPlayer
 import android.os.Build
-import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.SavedStateHandle
 import com.woolenstorm.musicplayer.data.AppContainer
 import com.woolenstorm.musicplayer.data.DefaultAppContainer
 
@@ -20,10 +17,4 @@ class MusicPlayerApplication : Application() {
             == PackageManager.PERMISSION_GRANTED)
             container = DefaultAppContainer(this)
     }
-
-//    override fun onTerminate() {
-//        Log.d("MusicPlayerApplication", "onTerminate()")
-//        container.songsRepository.saveState(this, true)
-//        super.onTerminate()
-//    }
 }
