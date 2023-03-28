@@ -1,8 +1,6 @@
 package com.woolenstorm.musicplayer
 
-import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -15,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.woolenstorm.musicplayer.data.SongsRepository
-import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.MusicPlayerApp
 import com.woolenstorm.musicplayer.ui.screens.AppViewModel
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
@@ -28,22 +25,6 @@ class MainActivity : ComponentActivity() {
         songsRepository = (applicationContext as MusicPlayerApplication).container.songsRepository
         val viewModel = AppViewModel(songsRepository)
 
-        val sharedPreferences = getSharedPreferences(KEY_SONG_INFO_FILE, Context.MODE_PRIVATE)
-        viewModel.updateUiState(
-            song = Song(
-                uri = Uri.parse(sharedPreferences.getString(KEY_URI, "") ?: "") ?: Uri.EMPTY,
-                duration = sharedPreferences.getFloat(KEY_DURATION, 0f),
-                title = sharedPreferences.getString(KEY_TITLE, getString(R.string.unknown_title)) ?: getString(R.string.unknown_title),
-                artist = sharedPreferences.getString(KEY_ARTIST, getString(R.string.unknown_artist)) ?: getString(R.string.unknown_artist),
-                album = sharedPreferences.getString(KEY_ALBUM, "") ?: "",
-                albumArtworkUri = sharedPreferences.getString(KEY_ALBUM_ARTWORK, "") ?: ""
-            ),
-            isPlaying = sharedPreferences.getBoolean(KEY_IS_PLAYING, false),
-            timestamp = sharedPreferences.getFloat(KEY_TIMESTAMP, 0f),
-            currentIndex = sharedPreferences.getInt(KEY_CURRENT_INDEX, 0),
-            isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false),
-            isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false)
-        )
         viewModel.isHomeScreen.value = intent.getBooleanExtra(KEY_IS_HOMESCREEN, true)
 
         setContent {

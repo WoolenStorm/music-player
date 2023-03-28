@@ -32,7 +32,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         currentIndex: Int? = null,
         isShuffling: Boolean? = null,
         isSongChosen: Boolean? = null,
-        playbackStarted: Long? = null
+        playbackStarted: Long? = null,
+        isHomeScreen: Boolean? = null
     ) {
         songsRepository.updateUiState(
             song = song,
@@ -41,7 +42,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             currentIndex = currentIndex,
             isShuffling = isShuffling,
             isSongChosen = isSongChosen,
-            playbackStarted = playbackStarted
+            playbackStarted = playbackStarted,
+            isHomeScreen = isHomeScreen
         )
     }
 

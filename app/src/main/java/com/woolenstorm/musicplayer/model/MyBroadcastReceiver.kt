@@ -29,7 +29,28 @@ class MyBroadcastReceiver(private val application: Application) : BroadcastRecei
             ACTION_PLAY_NEXT -> nextSong()
             ACTION_TOGGLE_IS_PLAYING -> if (player.isPlaying) pause() else continuePlaying()
             ACTION_TOGGLE_IS_SHUFFLING -> onToggleShuffle()
+            ACTION_OPEN_NEW_ACTIVITY -> openActivity()
         }
+    }
+
+    private fun openActivity() {
+        val activityIntent = Intent(application, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        activityIntent.apply {
+            putExtra(KEY_IS_HOMESCREEN, false)
+            putExtra(KEY_URI, uiState.value.song.uri)
+            putExtra(KEY_DURATION, uiState.value.song.duration)
+            putExtra(KEY_TITLE, uiState.value.song.title)
+            putExtra(KEY_ARTIST, uiState.value.song.artist)
+            putExtra(KEY_ALBUM, uiState.value.song.album)
+            putExtra(KEY_ALBUM_ARTWORK, uiState.value.song.albumArtworkUri)
+
+            putExtra(KEY_IS_PLAYING, uiState.value.isPlaying)
+            putExtra(KEY_TIMESTAMP, uiState.value.timestamp)
+            putExtra(KEY_CURRENT_INDEX, uiState.value.currentIndex)
+            putExtra(KEY_IS_SHUFFLING, uiState.value.isShuffling)
+            putExtra(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
+        }
+        application.startActivity(activityIntent)
     }
 
     private fun nextSong() {

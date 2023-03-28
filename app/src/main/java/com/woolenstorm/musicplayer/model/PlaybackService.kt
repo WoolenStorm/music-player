@@ -61,12 +61,13 @@ class PlaybackService : Service() {
         val prevSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_PREVIOUS)
         val toggleIsPlayingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_IS_PLAYING)
         val toggleIsShufflingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_IS_SHUFFLING)
+        val openActivityIntent = Intent(application, MainActivity::class.java).apply {
+            putExtra(KEY_IS_HOMESCREEN, false)
+        }
 
-        val activityIntent = Intent(application, MainActivity::class.java)
-        activityIntent.putExtra(KEY_IS_HOMESCREEN, false)
-        val activityPendingIntent = androidx.core.app.TaskStackBuilder.create(application).run {
-            addNextIntent(activityIntent)
-            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+        val pendingOpenActivityIntent = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(openActivityIntent)
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
 
         val flag = PendingIntent.FLAG_IMMUTABLE
@@ -136,7 +137,7 @@ class PlaybackService : Service() {
             .addAction(R.drawable.ic_next, getString(R.string.play_next), pendingNextSongIntent)
             .addAction(if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off, getString(R.string.toggle_is_shuffling), pendingToggleIsShufflingIntent)
             .addAction(R.drawable.baseline_close_24, getString(R.string.close), pendingClosingIntent)
-            .setContentIntent(activityPendingIntent)
+            .setContentIntent(pendingOpenActivityIntent)
             .setPriority(PRIORITY_LOW)
             .setSilent(true)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_DEFERRED)

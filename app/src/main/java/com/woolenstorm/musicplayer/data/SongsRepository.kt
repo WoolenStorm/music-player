@@ -2,6 +2,7 @@ package com.woolenstorm.musicplayer.data
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.net.Uri
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Song
@@ -9,13 +10,35 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class SongsRepository(context: Context) {
+class SongsRepository(private val context: Context) {
 
     private val musicApi = DefaultMusicPlayerApi(context)
     val player = MediaPlayer()
     var songs = musicApi.getSongs()
     private var _uiState = MutableStateFlow(MusicPlayerUiState())
     val uiState = _uiState.asStateFlow()
+
+    init {
+        val sharedPreferences = context.getSharedPreferences(KEY_SONG_INFO_FILE, Context.MODE_PRIVATE)
+        val defaultTitle = context.resources.getString(R.string.unknown_title)
+        val defaultArtist = context.resources.getString(R.string.unknown_artist)
+        updateUiState(
+            song = Song(
+                uri = Uri.parse(sharedPreferences.getString(KEY_URI, "") ?: "") ?: Uri.EMPTY,
+                duration = sharedPreferences.getFloat(KEY_DURATION, 0f),
+                title = sharedPreferences.getString(KEY_TITLE, defaultTitle) ?: defaultTitle,
+                artist = sharedPreferences.getString(KEY_ARTIST, defaultArtist) ?: defaultArtist,
+                album = sharedPreferences.getString(KEY_ALBUM, "") ?: "",
+                albumArtworkUri = sharedPreferences.getString(KEY_ALBUM_ARTWORK, "") ?: ""
+            ),
+            isPlaying = sharedPreferences.getBoolean(KEY_IS_PLAYING, false),
+            timestamp = sharedPreferences.getFloat(KEY_TIMESTAMP, 0f),
+            currentIndex = sharedPreferences.getInt(KEY_CURRENT_INDEX, 0),
+            isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false),
+            isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false),
+            isHomeScreen = sharedPreferences.getBoolean(KEY_IS_HOMESCREEN, true)
+        )
+    }
 
     fun updateUiState(
         song: Song? = null,
@@ -24,7 +47,8 @@ class SongsRepository(context: Context) {
         currentIndex: Int? = null,
         isShuffling: Boolean? = null,
         isSongChosen: Boolean? = null,
-        playbackStarted: Long? = null
+        playbackStarted: Long? = null,
+        isHomeScreen: Boolean? = null
     ) {
         _uiState.update {
             MusicPlayerUiState(
@@ -35,7 +59,8 @@ class SongsRepository(context: Context) {
                 isShuffling = isShuffling ?: uiState.value.isShuffling,
                 isSongChosen = isSongChosen ?: uiState.value.isSongChosen,
                 currentPosition = player.currentPosition,
-                playbackStarted = playbackStarted ?: uiState.value.playbackStarted
+                playbackStarted = playbackStarted ?: uiState.value.playbackStarted,
+                isHomeScreen = isHomeScreen ?: uiState.value.isHomeScreen
             )
         }
     }
@@ -54,6 +79,7 @@ class SongsRepository(context: Context) {
             putString(KEY_ALBUM, uiState.value.song.album)
             putString(KEY_ALBUM_ARTWORK, uiState.value.song.albumArtworkUri)
             putBoolean(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
+            putBoolean(KEY_IS_HOMESCREEN, uiState.value.isHomeScreen)
             apply()
         }
     }

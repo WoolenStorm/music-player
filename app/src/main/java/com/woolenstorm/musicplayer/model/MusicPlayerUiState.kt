@@ -8,5 +8,6 @@ data class MusicPlayerUiState(
     val isShuffling: Boolean = false,
     val isSongChosen: Boolean = false,
     val currentPosition: Int = 0,
-    val playbackStarted: Long = 0
+    val playbackStarted: Long = 0,
+    val isHomeScreen: Boolean = true
 )
