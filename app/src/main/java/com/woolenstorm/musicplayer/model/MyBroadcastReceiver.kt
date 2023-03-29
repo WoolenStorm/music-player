@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.woolenstorm.musicplayer.*
 import kotlin.random.Random
@@ -18,6 +19,10 @@ class MyBroadcastReceiver(private val application: Application) : BroadcastRecei
     private val uiState = songsRepository.uiState
 
     override fun onReceive(context: Context?, intent: Intent) {
+        if (intent.action == android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+            pause()
+            return
+        }
         when (intent.getStringExtra(KEY_ACTION) ?: "") {
             ACTION_CLOSE -> {
                 songsRepository.saveState(application, true)

@@ -4,6 +4,7 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
@@ -31,8 +32,7 @@ class PlaybackService : Service() {
 
     override fun onCreate() {
         receiver = MyBroadcastReceiver(application)
-
-        application.registerReceiver(receiver, IntentFilter(KEY_APPLICATION_TAG))
+        application.registerReceiver(receiver, IntentFilter(KEY_APPLICATION_TAG).apply { addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY) })
         songsRepository = (application as MusicPlayerApplication).container.songsRepository
         songs = songsRepository.songs
         player = MediaPlayer()
