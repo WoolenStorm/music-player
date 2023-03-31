@@ -1,6 +1,7 @@
 package com.woolenstorm.musicplayer.ui
 
 import android.app.Activity
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -11,14 +12,17 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.screens.HomeScreen
 import com.woolenstorm.musicplayer.ui.screens.AppViewModel
 import com.woolenstorm.musicplayer.ui.screens.SongDetailsScreen
 
 @Composable
 fun MusicPlayerApp(
+    isDeleted: MutableState<Boolean>,
     viewModel: AppViewModel,
     activity: Activity?,
+    onDelete: (Song) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -29,8 +33,8 @@ fun MusicPlayerApp(
             modifier = modifier.padding(it)
         ) {
             HomeScreen(
+                isDeleted = isDeleted,
                 viewModel = viewModel,
-                songs = viewModel.songs,
                 onSongClicked = { song ->
                     viewModel.updateUiState(
                         currentIndex = viewModel.songs.indexOf(song),
@@ -42,12 +46,15 @@ fun MusicPlayerApp(
                             viewModel.continuePlaying(context)
                         }
                         song != viewModel.uiState.value.song -> {
-                            viewModel.cancel()
+                            viewModel.cancel(context)
                             viewModel.updateUiState(song = song)
                             viewModel.play(context)
                         }
                     }
                     viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
+                },
+                onOptionsClicked = { song ->
+                    onDelete(song)
                 }
             )
             AnimatedVisibility(

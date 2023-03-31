@@ -3,6 +3,7 @@ package com.woolenstorm.musicplayer.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.util.Log
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
@@ -16,12 +17,16 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.random.Random
 
+private const val TAG = "AppViewModel"
 class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     private val mediaPlayer = songsRepository.player
     val songs = songsRepository.songs
     val isHomeScreen = mutableStateOf(true)
-    val currentPosition = MutableStateFlow(mediaPlayer.currentPosition.toFloat())
+    val currentPosition = MutableStateFlow(
+        if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition.toFloat()
+        else 0f
+    )
     var job: Job? = null
     val uiState = songsRepository.uiState
 
@@ -49,35 +54,23 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     init {
         startProgressSlider()
+        Log.d(TAG, "mediaPlayer.currentPosition.toFloat() = ${mediaPlayer.currentPosition.toFloat()}")
+        Log.d(TAG, "mediaPlayer.duration = ${mediaPlayer.duration}")
     }
 
     fun startProgressSlider() {
+        Log.d(TAG, "startProgressSlider() started")
         job?.cancel()
+        if (!mediaPlayer.isPlaying) return
         job = viewModelScope.launch {
             while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
                 currentPosition.value = mediaPlayer.currentPosition.toFloat()
                 delay(250)
+                Log.d(TAG, "currentPosition.value = ${currentPosition.value}")
             }
         }
     }
 
-    fun deleteSong(song: Song?, context: Context) {
-//        Log.d("AppViewModel", "song = $song")
-//        if (song != null) {
-//            val fileToDelete = song.uri.path?.let { File(it) }
-//            if (fileToDelete?.exists() == true) {
-//                fileToDelete.canonicalFile.delete()
-//                if (fileToDelete.exists()) {
-//                    context.applicationContext.deleteFile(fileToDelete.name)
-//                    Log.d("AppViewModel", "file deleted: ${song.uri.path}")
-//                } else {
-//                    Log.d("AppViewModel", "file not deleted: ${song.uri.path}")
-//                }
-//            } else {
-//                Log.d("AppViewModel", "file does not exist: ${fileToDelete}")
-//            }
-//        }
-    }
 
     fun onToggleShuffle(context: Context) {
         updateUiState(isShuffling = !uiState.value.isShuffling)
@@ -85,6 +78,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun nextSong(context: Context) {
+        Log.d(TAG, "nextSong()")
+        if (songs.isEmpty()) return
         val newIndex = if (uiState.value.isShuffling) {
             Random.nextInt(0, songs.size)
         } else (uiState.value.currentIndex + 1) % songs.size
@@ -92,7 +87,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             song = songs[newIndex],
             currentIndex = newIndex
         )
-        cancel()
+        cancel(context)
         play(context)
     }
 
@@ -107,18 +102,22 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             song = nSong,
             currentIndex = newIndex % songs.size
         )
-        cancel()
+        cancel(context)
         play(context)
     }
 
-    fun cancel() {
+    fun cancel(context: Context, isBeingDeleted: Boolean = false) {
+        updateUiState(isPlaying = false)
         mediaPlayer.stop()
         mediaPlayer.reset()
-        updateUiState(isPlaying = false)
+        mediaPlayer.setOnCompletionListener { }
+        createNotification(context)
+
+        Log.d(TAG, "mediaPlayer.isPlaying = ${mediaPlayer.isPlaying}")
     }
 
     fun play(context: Context) {
-        cancel()
+        cancel(context)
         mediaPlayer.apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
@@ -149,7 +148,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     fun continuePlaying(context: Context) {
 
-        val currPos = mediaPlayer.currentPosition
+        val currPos = if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition else 0
+
         mediaPlayer.reset()
 
         mediaPlayer.apply {
@@ -171,8 +171,11 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun updateTimestamp(newTimestamp: Float) {
+        Log.d(TAG, "updateTimestamp($newTimestamp)")
         updateUiState(timestamp = newTimestamp)
+        currentPosition.value = newTimestamp
         mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
+        Log.d(TAG, "updateTimestamp.end: mediaPlayer.currentPosition = ${mediaPlayer.currentPosition}")
     }
 
     companion object {

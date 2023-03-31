@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class SongsRepository(private val context: Context) {
+class SongsRepository(context: Context) {
 
     private val musicApi = DefaultMusicPlayerApi(context)
     val player = MediaPlayer()

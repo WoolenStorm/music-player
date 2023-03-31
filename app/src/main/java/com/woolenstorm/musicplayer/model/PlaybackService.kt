@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -18,6 +19,7 @@ import androidx.core.app.NotificationCompat.*
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.SongsRepository
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 import java.io.FileNotFoundException
 
 class PlaybackService : Service() {
@@ -140,13 +142,15 @@ class PlaybackService : Service() {
             .setContentIntent(pendingOpenActivityIntent)
             .setPriority(PRIORITY_LOW)
             .setSilent(true)
+            .setShowWhen(false)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_DEFERRED)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
                 .setShowActionsInCompactView(0, 1, 2)
-                .setMediaSession(mediaSession.sessionToken))
+                .setMediaSession(mediaSession.sessionToken)
+            )
             .build()
 
-        startForeground(1, notification)
+        if (File(uiState.value.song.path).exists()) startForeground(1, notification)
 
         return START_NOT_STICKY
     }

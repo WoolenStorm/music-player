@@ -12,7 +12,9 @@ class MusicPlayerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        val permission = if (Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO else android.Manifest.permission.READ_EXTERNAL_STORAGE
+        val permission = if (Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO else
+            if (Build.VERSION.SDK_INT >= 30) android.Manifest.permission.READ_EXTERNAL_STORAGE else android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+//        val permission = if (Build.VERSION.SDK_INT >= 30) android.Manifest.permission.MANAGE_EXTERNAL_STORAGE else android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         if (ContextCompat.checkSelfPermission(applicationContext, permission)
             == PackageManager.PERMISSION_GRANTED)
             container = DefaultAppContainer(this)

@@ -1,7 +1,9 @@
 package com.woolenstorm.musicplayer.ui.screens
 
 import android.net.Uri
+import android.os.Build
 import android.util.Log
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -29,8 +31,8 @@ import com.woolenstorm.musicplayer.R
 
 @Composable
 fun HomeScreen(
+    isDeleted: MutableState<Boolean>,
     viewModel: AppViewModel,
-    songs: List<Song>,
     modifier: Modifier = Modifier,
     onSongClicked: (Song) -> Unit = {},
     onOptionsClicked: (Song) -> Unit = {}
@@ -39,16 +41,31 @@ fun HomeScreen(
     val context = LocalContext.current
     var dialogOpen by remember { mutableStateOf(false) }
     var songToDelete by remember { mutableStateOf<Song?>(null) }
+    val songs = remember { viewModel.songs }
 
     if (dialogOpen) {
         AlertDialog(
             onDismissRequest = { dialogOpen = false },
-            confirmButton = { TextButton(onClick = {
-                viewModel.deleteSong(songToDelete, context)
-                Log.d("HomeScreen", "deleteSong(${songToDelete?.title})")
-                dialogOpen = false
-            }) { Text(text = "Delete")} },
-            dismissButton = { TextButton(onClick = { dialogOpen = false }) { Text(text = "Cancel")} },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        songToDelete?.let {
+                            onOptionsClicked(it)
+//                            if (isDeleted.value || Build.VERSION.SDK_INT < 30) songs.remove(it)
+                        }
+                        dialogOpen = false
+                    }
+                ) {
+                    Text(text = "Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { dialogOpen = false }
+                ) {
+                    Text(text = "Cancel")
+                }
+            },
             title = { Text("Delete this song?")},
             text = { Text("It will be deleted permanently")}
         )
@@ -57,15 +74,14 @@ fun HomeScreen(
     Surface(
         modifier = modifier.fillMaxSize()
     ) {
-        Column {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter
-            ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Column {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentPadding = PaddingValues(all = 8.dp),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 48.dp),
                     verticalArrangement = Arrangement.Top
                 ) {
                     items(songs) {
@@ -73,30 +89,30 @@ fun HomeScreen(
                             song = it,
                             onSongClicked = { onSongClicked(it) },
                             onOptionsClicked = {
-                                onOptionsClicked(it)
                                 songToDelete = it
-                                Log.d("HomeScreen", "onOptionsClicked(${it.title})")
                                 dialogOpen = true
-                            }
+                            },
+                            modifier = Modifier.animateContentSize()
                         )
-                        Divider()
                     }
                 }
-                if (uiState.isSongChosen) {
-                    CurrentPlayingSong(
-                        title = uiState.song.title,
-                        artist = uiState.song.artist,
-                        isPlaying = uiState.isPlaying,
-                        modifier = Modifier
-                            .background(MaterialTheme.colors.primaryVariant)
-                            .align(Alignment.BottomCenter),
-                        onPause = { viewModel.pause(context) },
-                        onContinue = { viewModel.continuePlaying(context) },
-                        onPlayNext = { viewModel.nextSong(context) },
-                        onPlayPrevious = { viewModel.previousSong(context) },
-                        onSongClicked = { viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value }
-                    )
-                }
+                Spacer(modifier = Modifier.height(48.dp))
+            }
+
+            if (uiState.isSongChosen) {
+                CurrentPlayingSong(
+                    title = uiState.song.title,
+                    artist = uiState.song.artist,
+                    isPlaying = uiState.isPlaying,
+                    modifier = Modifier
+                        .background(MaterialTheme.colors.primaryVariant)
+                        .align(Alignment.BottomCenter),
+                    onPause = { viewModel.pause(context) },
+                    onContinue = { viewModel.continuePlaying(context) },
+                    onPlayNext = { viewModel.nextSong(context) },
+                    onPlayPrevious = { viewModel.previousSong(context) },
+                    onSongClicked = { viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value }
+                )
             }
         }
     }
@@ -113,7 +129,7 @@ fun SongItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(4.dp)
-            .clickable(onClick = onSongClicked),
+            .clickable(onClick = onSongClicked)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -143,6 +159,7 @@ fun SongItem(
             }
         }
     }
+    Divider()
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -161,7 +178,8 @@ fun CurrentPlayingSong(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSongClicked() },
+            .clickable(onClick = onSongClicked)
+            .height(48.dp),
         elevation = 4.dp,
     ) {
         Row(
@@ -236,52 +254,8 @@ fun SongItemPreview() {
 @Preview
 @Composable
 fun HomeScreenPreview() {
+    val test = remember { mutableStateOf(false) }
     MusicPlayerTheme {
-        val songs = listOf(
-            Song(
-                id = 0,
-                title = "Nothing Else Matters",
-                artist = "Metallica",
-                duration = 273f,
-                uri = Uri.EMPTY,
-                path = "",
-                album = "",
-                albumId = 0
-            ),
-            Song(
-                id = 0,
-                title = "Nothing Else Matters",
-                artist = "Metallica",
-                duration = 273f,
-                uri = Uri.EMPTY,
-                path = "",
-                album = "",
-                albumId = 0
-            ),
-            Song(
-                id = 0,
-                title = "Nothing Else Matters",
-                artist = "Metallica",
-                duration = 273f,
-                uri = Uri.EMPTY,
-                path = "",
-                album = "",
-                albumId = 0
-            ),
-            Song(
-                id = 0,
-                title = "Nothing Else Matters",
-                artist = "Metallica",
-                duration = 273f,
-                uri = Uri.EMPTY,
-                path = "",
-                album = "",
-                albumId = 0
-            )
-        )
-        HomeScreen(
-            songs = songs,
-            viewModel = viewModel(factory = AppViewModel.factory)
-        )
+        HomeScreen(viewModel = viewModel(factory = AppViewModel.factory), isDeleted = test)
     }
 }
