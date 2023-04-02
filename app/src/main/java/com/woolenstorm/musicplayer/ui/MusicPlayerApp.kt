@@ -19,7 +19,6 @@ import com.woolenstorm.musicplayer.ui.screens.SongDetailsScreen
 
 @Composable
 fun MusicPlayerApp(
-    isDeleted: MutableState<Boolean>,
     viewModel: AppViewModel,
     activity: Activity?,
     onDelete: (Song) -> Unit,
@@ -33,7 +32,6 @@ fun MusicPlayerApp(
             modifier = modifier.padding(it)
         ) {
             HomeScreen(
-                isDeleted = isDeleted,
                 viewModel = viewModel,
                 onSongClicked = { song ->
                     viewModel.updateUiState(

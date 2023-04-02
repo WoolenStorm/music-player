@@ -21,13 +21,13 @@ private const val TAG = "AppViewModel"
 class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     private val mediaPlayer = songsRepository.player
-    val songs = songsRepository.songs
+    val songs = songsRepository.songs.toMutableStateList()
     val isHomeScreen = mutableStateOf(true)
     val currentPosition = MutableStateFlow(
         if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition.toFloat()
         else 0f
     )
-    var job: Job? = null
+    private var job: Job? = null
     val uiState = songsRepository.uiState
 
     fun updateUiState(
@@ -54,19 +54,15 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     init {
         startProgressSlider()
-        Log.d(TAG, "mediaPlayer.currentPosition.toFloat() = ${mediaPlayer.currentPosition.toFloat()}")
-        Log.d(TAG, "mediaPlayer.duration = ${mediaPlayer.duration}")
     }
 
     fun startProgressSlider() {
-        Log.d(TAG, "startProgressSlider() started")
         job?.cancel()
         if (!mediaPlayer.isPlaying) return
         job = viewModelScope.launch {
             while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
                 currentPosition.value = mediaPlayer.currentPosition.toFloat()
                 delay(250)
-                Log.d(TAG, "currentPosition.value = ${currentPosition.value}")
             }
         }
     }
@@ -106,14 +102,12 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         play(context)
     }
 
-    fun cancel(context: Context, isBeingDeleted: Boolean = false) {
+    fun cancel(context: Context) {
         updateUiState(isPlaying = false)
         mediaPlayer.stop()
         mediaPlayer.reset()
         mediaPlayer.setOnCompletionListener { }
         createNotification(context)
-
-        Log.d(TAG, "mediaPlayer.isPlaying = ${mediaPlayer.isPlaying}")
     }
 
     fun play(context: Context) {

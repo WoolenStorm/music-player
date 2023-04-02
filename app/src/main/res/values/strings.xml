@@ -9,4 +9,8 @@
     <string name="toggle_is_playing">toggle is playing</string>
     <string name="close">close the app</string>
     <string name="no_permission_given">Cannot access your songs :(</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_dialog_text">This song will be deleted permanently.</string>
+    <string name="delete_dialog_title">Delete this song?</string>
 </resources>

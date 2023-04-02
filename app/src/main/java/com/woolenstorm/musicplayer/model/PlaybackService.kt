@@ -27,7 +27,7 @@ class PlaybackService : Service() {
     private lateinit var receiver: MyBroadcastReceiver
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaController: MediaControllerCompat
-    private lateinit var songs: List<Song>
+    private lateinit var songs: MutableList<Song>
     private lateinit var songsRepository: SongsRepository
     private lateinit var player: MediaPlayer
     private lateinit var uiState: StateFlow<MusicPlayerUiState>

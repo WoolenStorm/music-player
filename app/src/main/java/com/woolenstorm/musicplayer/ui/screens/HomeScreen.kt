@@ -2,7 +2,6 @@ package com.woolenstorm.musicplayer.ui.screens
 
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -31,7 +30,6 @@ import com.woolenstorm.musicplayer.R
 
 @Composable
 fun HomeScreen(
-    isDeleted: MutableState<Boolean>,
     viewModel: AppViewModel,
     modifier: Modifier = Modifier,
     onSongClicked: (Song) -> Unit = {},
@@ -41,7 +39,7 @@ fun HomeScreen(
     val context = LocalContext.current
     var dialogOpen by remember { mutableStateOf(false) }
     var songToDelete by remember { mutableStateOf<Song?>(null) }
-    val songs = remember { viewModel.songs }
+    val songs = viewModel.songs.toMutableStateList()
 
     if (dialogOpen) {
         AlertDialog(
@@ -51,23 +49,23 @@ fun HomeScreen(
                     onClick = {
                         songToDelete?.let {
                             onOptionsClicked(it)
-//                            if (isDeleted.value || Build.VERSION.SDK_INT < 30) songs.remove(it)
+                            if (Build.VERSION.SDK_INT < 30) viewModel.songs.remove(it)
                         }
                         dialogOpen = false
                     }
                 ) {
-                    Text(text = "Delete")
+                    Text(text = stringResource(id = R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { dialogOpen = false }
                 ) {
-                    Text(text = "Cancel")
+                    Text(text = stringResource(id = R.string.cancel))
                 }
             },
-            title = { Text("Delete this song?")},
-            text = { Text("It will be deleted permanently")}
+            title = { Text(stringResource(id = R.string.delete_dialog_title)) },
+            text = { Text(stringResource(id = R.string.delete_dialog_text)) }
         )
     }
 
@@ -254,8 +252,7 @@ fun SongItemPreview() {
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    val test = remember { mutableStateOf(false) }
     MusicPlayerTheme {
-        HomeScreen(viewModel = viewModel(factory = AppViewModel.factory), isDeleted = test)
+        HomeScreen(viewModel = viewModel(factory = AppViewModel.factory))
     }
 }

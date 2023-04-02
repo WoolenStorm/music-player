@@ -7,6 +7,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.provider.MediaStore.Audio.Media
 import android.util.Log
+import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Song
 import java.io.File
 
@@ -80,7 +81,7 @@ class DefaultMusicPlayerApi(private val context: Context) : MusicPlayerApi {
                                     id = id,
                                     duration = duration,
                                     title = title,
-                                    artist = artist,
+                                    artist = if (artist != "<unknown>") artist else context.getString(R.string.unknown_artist),
                                     path = path,
                                     album = album,
                                     albumId = albumId,
@@ -93,11 +94,11 @@ class DefaultMusicPlayerApi(private val context: Context) : MusicPlayerApi {
             }
         }
         Log.d(TAG, "songs found: ${list.size}")
-        if (list.size >= 21) {
-            (0..20).forEach {
-                Log.d(TAG, "albumArtworkUri: ${list[it].artist} - ${list[it].title}")
-            }
-        }
+//        if (list.size >= 21) {
+//            (0..20).forEach {
+//                Log.d(TAG, "albumArtworkUri: ${list[it].artist} - ${list[it].title}")
+//            }
+//        }
         return list
     }
 }

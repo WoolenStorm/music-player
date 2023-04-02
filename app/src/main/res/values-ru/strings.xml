@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Music Player</string>
+    <string name="options">Настройки</string>
+    <string name="play_previous">Играть предыдущую песню</string>
+    <string name="play_next">Играть следующую песню</string>
+    <string name="toggle_is_shuffling">включить/выключить случайный порядок воспроизведения</string>
+    <string name="unknown_artist">/неизвестный исполнитель/</string>
+    <string name="unknown_title">/без названия/</string>
+    <string name="toggle_is_playing">играть / поставить на паузу</string>
+    <string name="close">Закрыть приложение</string>
+    <string name="no_permission_given">Не получилось загрузить твои песни :(</string>
+    <string name="delete">Удалить</string>
+    <string name="cancel">Отмена</string>
+    <string name="delete_dialog_text">Эта песня будет удалена безвозвратно.</string>
+    <string name="delete_dialog_title">Удалить эту песню?</string>
+</resources>
