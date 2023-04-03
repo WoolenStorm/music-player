@@ -52,6 +52,28 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         )
     }
 
+
+    fun onSongClicked(song: Song, context: Context) {
+        viewModelScope.launch {
+            updateUiState(
+                currentIndex = songs.indexOf(song),
+                isSongChosen = true
+            )
+            when {
+                song == uiState.value.song && uiState.value.isPlaying -> {}
+                song == uiState.value.song && !uiState.value.isPlaying -> {
+                    continuePlaying(context)
+                }
+                song != uiState.value.song -> {
+                    cancel(context)
+                    updateUiState(song = song)
+                    play(context)
+                }
+            }
+            isHomeScreen.value = !isHomeScreen.value
+        }
+    }
+
     init {
         startProgressSlider()
     }
@@ -74,32 +96,36 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun nextSong(context: Context) {
-        Log.d(TAG, "nextSong()")
-        if (songs.isEmpty()) return
-        val newIndex = if (uiState.value.isShuffling) {
-            Random.nextInt(0, songs.size)
-        } else (uiState.value.currentIndex + 1) % songs.size
-        updateUiState(
-            song = songs[newIndex],
-            currentIndex = newIndex
-        )
-        cancel(context)
-        play(context)
+        viewModelScope.launch {
+            if (songs.isNotEmpty()) {
+                val newIndex = if (uiState.value.isShuffling) {
+                    Random.nextInt(0, songs.size)
+                } else (uiState.value.currentIndex + 1) % songs.size
+                updateUiState(
+                    song = songs[newIndex],
+                    currentIndex = newIndex
+                )
+                cancel(context)
+                play(context)
+            }
+        }
     }
 
     fun previousSong(context: Context) {
-        val newIndex = if (uiState.value.isShuffling) {
-            Random.nextInt(0, songs.size)
-        } else {
-            if (uiState.value.currentIndex <= 0) songs.size - 1 else uiState.value.currentIndex - 1
+        viewModelScope.launch {
+            val newIndex = if (uiState.value.isShuffling) {
+                Random.nextInt(0, songs.size)
+            } else {
+                if (uiState.value.currentIndex <= 0) songs.size - 1 else uiState.value.currentIndex - 1
+            }
+            val nSong = songs[newIndex]
+            updateUiState(
+                song = nSong,
+                currentIndex = newIndex % songs.size
+            )
+            cancel(context)
+            play(context)
         }
-        val nSong = songs[newIndex]
-        updateUiState(
-            song = nSong,
-            currentIndex = newIndex % songs.size
-        )
-        cancel(context)
-        play(context)
     }
 
     fun cancel(context: Context) {
@@ -135,41 +161,45 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun pause(context: Context) {
-        mediaPlayer.pause()
-        createNotification(context)
-        updateUiState(isPlaying = false)
+        viewModelScope.launch {
+            mediaPlayer.pause()
+            createNotification(context)
+            updateUiState(isPlaying = false)
+        }
     }
 
     fun continuePlaying(context: Context) {
 
-        val currPos = if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition else 0
+        viewModelScope.launch {
+            val currPos = if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition else 0
 
-        mediaPlayer.reset()
+            mediaPlayer.reset()
 
-        mediaPlayer.apply {
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .build()
-            )
-            setOnCompletionListener { nextSong(context) }
-            setDataSource(context, uiState.value.song.uri)
-            prepare()
-            seekTo(currPos)
-            start()
+            mediaPlayer.apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+                )
+                setOnCompletionListener { nextSong(context) }
+                setDataSource(context, uiState.value.song.uri)
+                prepare()
+                seekTo(currPos)
+                start()
+            }
+            updateUiState(isPlaying = true)
+            startProgressSlider()
+            createNotification(context)
         }
-        updateUiState(isPlaying = true)
-        startProgressSlider()
-        createNotification(context)
     }
 
     fun updateTimestamp(newTimestamp: Float) {
-        Log.d(TAG, "updateTimestamp($newTimestamp)")
-        updateUiState(timestamp = newTimestamp)
-        currentPosition.value = newTimestamp
-        mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
-        Log.d(TAG, "updateTimestamp.end: mediaPlayer.currentPosition = ${mediaPlayer.currentPosition}")
+        viewModelScope.launch {
+            updateUiState(timestamp = newTimestamp)
+            currentPosition.value = newTimestamp
+            mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
+        }
     }
 
     companion object {

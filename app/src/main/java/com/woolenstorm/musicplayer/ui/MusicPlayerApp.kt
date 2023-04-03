@@ -34,22 +34,7 @@ fun MusicPlayerApp(
             HomeScreen(
                 viewModel = viewModel,
                 onSongClicked = { song ->
-                    viewModel.updateUiState(
-                        currentIndex = viewModel.songs.indexOf(song),
-                        isSongChosen = true
-                    )
-                    when {
-                        song == viewModel.uiState.value.song && viewModel.uiState.value.isPlaying -> {}
-                        song == viewModel.uiState.value.song && !viewModel.uiState.value.isPlaying -> {
-                            viewModel.continuePlaying(context)
-                        }
-                        song != viewModel.uiState.value.song -> {
-                            viewModel.cancel(context)
-                            viewModel.updateUiState(song = song)
-                            viewModel.play(context)
-                        }
-                    }
-                    viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value
+                    viewModel.onSongClicked(song, activity ?: context)
                 },
                 onOptionsClicked = { song ->
                     onDelete(song)

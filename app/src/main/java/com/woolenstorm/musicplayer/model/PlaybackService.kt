@@ -1,12 +1,12 @@
 package com.woolenstorm.musicplayer.model
 
 import android.app.*
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -15,6 +15,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.core.app.NotificationCompat.*
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.SongsRepository
@@ -22,19 +23,29 @@ import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import java.io.FileNotFoundException
 
+private const val TAG = "PlaybackService"
 class PlaybackService : Service() {
 
-    private lateinit var receiver: MyBroadcastReceiver
+    private lateinit var controlsReceiver: ControlsReceiver
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaController: MediaControllerCompat
     private lateinit var songs: MutableList<Song>
     private lateinit var songsRepository: SongsRepository
     private lateinit var player: MediaPlayer
     private lateinit var uiState: StateFlow<MusicPlayerUiState>
+    private val intentFilter = IntentFilter(KEY_APPLICATION_TAG)
 
     override fun onCreate() {
-        receiver = MyBroadcastReceiver(application)
-        application.registerReceiver(receiver, IntentFilter(KEY_APPLICATION_TAG).apply { addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY) })
+
+        controlsReceiver = ControlsReceiver(application)
+        intentFilter.apply {
+            addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+            addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED)
+        }
+        application.registerReceiver(
+            controlsReceiver,
+            intentFilter
+        )
         songsRepository = (application as MusicPlayerApplication).container.songsRepository
         songs = songsRepository.songs
         player = MediaPlayer()
@@ -160,8 +171,18 @@ class PlaybackService : Service() {
     }
 
     override fun onDestroy() {
-        unregisterReceiver(receiver)
+        Log.d(TAG, "onDestroy()")
+        application.unregisterReceiver(controlsReceiver)
         songsRepository.saveState(application, true)
         player.release()
     }
 }
+
+//private class BecomingNoisyReceiver(private val application: Application) : BroadcastReceiver() {
+//
+//    override fun onReceive(context: Context, intent: Intent) {
+//        if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+//            (application as MusicPlayerApplication).container.songsRepository.player.pause()
+//        }
+//    }
+//}
