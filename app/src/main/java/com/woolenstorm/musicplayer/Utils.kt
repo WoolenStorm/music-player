@@ -33,3 +33,11 @@ fun isDarkModeOn(ctx: Context): Boolean {
     val currentMode = ctx.applicationContext.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
     return currentMode == Configuration.UI_MODE_NIGHT_YES
 }
+
+enum class CurrentScreen {
+    Songs, Playlists
+}
+
+enum class NavigationType {
+    BottomNavigation, NavigationRail
+}

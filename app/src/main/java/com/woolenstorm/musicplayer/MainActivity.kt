@@ -14,6 +14,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
         else requestPermissionLauncher.launch(permissionRead)
     }
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     private fun initializeApp() {
 
         songsRepository = (applicationContext as MusicPlayerApplication).container.songsRepository
@@ -60,12 +63,14 @@ class MainActivity : ComponentActivity() {
         viewModel.isHomeScreen.value = intent.getBooleanExtra(KEY_IS_HOMESCREEN, true)
 
         setContent {
+            val windowSize = calculateWindowSizeClass(activity = this)
             MusicPlayerTheme {
                 val systemUiController = rememberSystemUiController()
                 val statusBarColor = if (isSystemInDarkTheme()) Color(0xFF1C0A00) else Color(0xFFF8EDE3)
                 SideEffect { systemUiController.setSystemBarsColor(color = statusBarColor) }
                 MusicPlayerApp(
                     viewModel = viewModel,
+                    windowSize = windowSize.widthSizeClass,
                     onSongClicked = { viewModel.onSongClicked(it, application) },
                     removeSongFromViewModel = { viewModel.songs.remove(it) },
                     onPause = { viewModel.pause(application) },

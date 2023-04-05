@@ -9,10 +9,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.woolenstorm.musicplayer.CurrentScreen
+import com.woolenstorm.musicplayer.NavigationType
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.screens.HomeScreen
@@ -22,6 +25,7 @@ import com.woolenstorm.musicplayer.ui.screens.SongDetailsScreen
 @Composable
 fun MusicPlayerApp(
     viewModel: AppViewModel,
+    windowSize: WindowWidthSizeClass,
     onSongClicked: (Song) -> Unit,
     onDelete: (Song) -> Unit,
     onPause: () -> Unit,
@@ -38,10 +42,22 @@ fun MusicPlayerApp(
 
     val uiState = viewModel.uiState.collectAsState().value
 
+    val navigationType: NavigationType
+
+    when (windowSize) {
+        WindowWidthSizeClass.Compact -> {
+            navigationType = NavigationType.BottomNavigation
+        }
+        else -> {
+            navigationType = NavigationType.NavigationRail
+        }
+    }
+
     Scaffold {
         Surface(
             modifier = modifier.padding(it)
         ) {
+
             HomeScreen(
                 uiState = uiState,
                 onSongClicked = onSongClicked,
