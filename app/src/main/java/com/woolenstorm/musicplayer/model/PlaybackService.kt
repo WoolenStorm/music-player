@@ -160,7 +160,6 @@ class PlaybackService : Service() {
                 .setMediaSession(mediaSession.sessionToken)
             )
             .build()
-
         if (File(uiState.value.song.path).exists()) startForeground(1, notification)
 
         return START_NOT_STICKY

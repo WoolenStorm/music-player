@@ -14,6 +14,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -27,19 +28,23 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
+import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 
 @Composable
 fun HomeScreen(
-    viewModel: AppViewModel,
+    uiState: MusicPlayerUiState,
+    songs: SnapshotStateList<Song>,
     modifier: Modifier = Modifier,
+    removeSongFromViewModel: (Song) -> Unit = {},
     onSongClicked: (Song) -> Unit = {},
-    onOptionsClicked: (Song) -> Unit = {}
+    onOptionsClicked: (Song) -> Unit = {},
+    onPause: () -> Unit = {},
+    onPlayNext: () -> Unit = {},
+    onPlayPrevious: () -> Unit = {},
+    onContinue: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
     var dialogOpen by remember { mutableStateOf(false) }
     var songToDelete by remember { mutableStateOf<Song?>(null) }
-    val songs = viewModel.songs.toMutableStateList()
 
     if (dialogOpen) {
         AlertDialog(
@@ -49,7 +54,7 @@ fun HomeScreen(
                     onClick = {
                         songToDelete?.let {
                             onOptionsClicked(it)
-                            if (Build.VERSION.SDK_INT < 30) viewModel.songs.remove(it)
+                            if (Build.VERSION.SDK_INT < 30) removeSongFromViewModel(it)
                         }
                         dialogOpen = false
                     }
@@ -105,11 +110,11 @@ fun HomeScreen(
                     modifier = Modifier
                         .background(MaterialTheme.colors.primaryVariant)
                         .align(Alignment.BottomCenter),
-                    onPause = { viewModel.pause(context) },
-                    onContinue = { viewModel.continuePlaying(context) },
-                    onPlayNext = { viewModel.nextSong(context) },
-                    onPlayPrevious = { viewModel.previousSong(context) },
-                    onSongClicked = { viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value }
+                    onPause = onPause,
+                    onContinue = onContinue,
+                    onPlayNext = onPlayNext,
+                    onPlayPrevious = onPlayPrevious,
+                    onSongClicked = { onSongClicked(uiState.song) }
                 )
             }
         }
@@ -253,6 +258,29 @@ fun SongItemPreview() {
 @Composable
 fun HomeScreenPreview() {
     MusicPlayerTheme {
-        HomeScreen(viewModel = viewModel(factory = AppViewModel.factory))
+        HomeScreen(
+            uiState = MusicPlayerUiState(
+                song = Song(title = "Hellraiser", artist = "Attila"),
+                isPlaying = true,
+                isSongChosen = true
+            ),
+            songs = listOf(
+                Song(title = "Nothing Else Matters", artist = "Metallica"),
+                Song(title = "Enter Sandman", artist = "Metallica"),
+                Song(title = "Damage Inc.", artist = "Metallica"),
+                Song(title = "Master of Puppets", artist = "Metallica"),
+                Song(title = "Battery", artist = "Metallica"),
+                Song(title = "Symphony Of Destruction", artist = "Megadeth"),
+                Song(title = "Holy Wars.. The Punishment Due", artist = "Megadeth"),
+                Song(title = "Rust in Peace.. Polaris", artist = "Megadeth"),
+                Song(title = "Tornado Of Souls", artist = "Megadeth"),
+                Song(title = "This Was My Life", artist = "Megadeth"),
+                Song(title = "Angel Of Death", artist = "Slayer"),
+                Song(title = "Repentless", artist = "Slayer"),
+                Song(title = "You Against You", artist = "Slayer"),
+                Song(title = "Implode", artist = "Slayer"),
+                Song(title = "Bitter Peace", artist = "Slayer")
+            ).toMutableStateList()
+        )
     }
 }

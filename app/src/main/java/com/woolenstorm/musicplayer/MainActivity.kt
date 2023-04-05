@@ -9,7 +9,6 @@ import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -64,14 +63,19 @@ class MainActivity : ComponentActivity() {
             MusicPlayerTheme {
                 val systemUiController = rememberSystemUiController()
                 val statusBarColor = if (isSystemInDarkTheme()) Color(0xFF1C0A00) else Color(0xFFF8EDE3)
-                SideEffect {
-                    systemUiController.setSystemBarsColor(
-                        color = statusBarColor
-                    )
-                }
+                SideEffect { systemUiController.setSystemBarsColor(color = statusBarColor) }
                 MusicPlayerApp(
                     viewModel = viewModel,
-                    activity = this,
+                    onSongClicked = { viewModel.onSongClicked(it, application) },
+                    removeSongFromViewModel = { viewModel.songs.remove(it) },
+                    onPause = { viewModel.pause(application) },
+                    onContinue = { viewModel.continuePlaying(application) },
+                    onPlayNext = { viewModel.nextSong(application) },
+                    onPlayPrevious = { viewModel.previousSong(application) },
+                    onGoBack = { viewModel.updateUiState(isHomeScreen = true) },
+                    songs = viewModel.songs,
+                    onToggleShuffle = { viewModel.onToggleShuffle(application) },
+                    updateTimestamp = { viewModel.updateCurrentPosition(it) },
                     onDelete = {
 
                         val index = songsRepository.songs.indexOf(it)

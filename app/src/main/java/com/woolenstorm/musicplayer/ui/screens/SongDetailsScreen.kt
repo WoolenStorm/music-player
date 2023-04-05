@@ -1,6 +1,5 @@
 package com.woolenstorm.musicplayer.ui.screens
 
-import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
@@ -19,24 +18,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
+import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import java.io.FileNotFoundException
 
 @Composable
 fun SongDetailsScreen(
-    context: Context,
-    viewModel: AppViewModel,
-    modifier: Modifier = Modifier
+    uiState: MusicPlayerUiState,
+    modifier: Modifier = Modifier,
+    onGoBack: () -> Unit = {},
+    onToggleShuffle: () -> Unit = {},
+    updateTimestamp: (Float) -> Unit = {},
+    onPause: () -> Unit = {},
+    onPlayPrevious: () -> Unit = {},
+    onPlayNext: () -> Unit = {},
+    onContinuePlaying: () -> Unit = {}
 ) {
-    BackHandler { viewModel.isHomeScreen.value = !viewModel.isHomeScreen.value }
-
-    val uiState by viewModel.uiState.collectAsState()
-    val currentPosition by viewModel.currentPosition.collectAsState()
-
-    if (uiState.isPlaying) viewModel.startProgressSlider()
+    BackHandler { onGoBack() }
 
     Surface(modifier = modifier.fillMaxSize()) {
         Column(
@@ -45,34 +45,42 @@ fun SongDetailsScreen(
                 .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
             Spacer(modifier = Modifier.height(48.dp))
             AlbumArtwork(uiState.song.albumArtworkUri)
             Spacer(modifier = Modifier.height(24.dp))
             SongTitleRow(uiState.song)
-            IconButton(
-                onClick = { viewModel.onToggleShuffle(context) }
-            ) {
-                Icon(
-                    painter = painterResource(
-                        id = if (uiState.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
-                    ),
-                    contentDescription = stringResource(id = R.string.toggle_is_shuffling)
-                )
-            }
+            ShuffleButton(uiState = uiState, onToggleShuffle = onToggleShuffle)
             SongProgressSlider(
                 duration = uiState.song.duration,
-                value = currentPosition,
-                onValueChange = { viewModel.updateTimestamp(it) },
+                value = uiState.currentPosition,
+                onValueChange = updateTimestamp,
                 modifier = Modifier.padding(8.dp)
             )
             ActionButtonsRow(
                 isPlaying = uiState.isPlaying,
-                onPause = { viewModel.pause(context) },
-                onContinuePlaying = { viewModel.continuePlaying(context) },
-                onPlayPrevious = { viewModel.previousSong(context) },
-                onPlayNext = { viewModel.nextSong(context) }
+                onPause = onPause,
+                onContinuePlaying = onContinuePlaying,
+                onPlayPrevious = onPlayPrevious,
+                onPlayNext = onPlayNext
             )
         }
+    }
+}
+
+@Composable
+fun ShuffleButton(
+    uiState: MusicPlayerUiState,
+    onToggleShuffle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(onClick = onToggleShuffle, modifier = modifier) {
+        Icon(
+            painter = painterResource(
+                id = if (uiState.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+            ),
+            contentDescription = stringResource(id = R.string.toggle_is_shuffling)
+        )
     }
 }
 
@@ -229,8 +237,7 @@ fun SongProgressSlider(
 fun SongDetailsScreenPreview() {
     MusicPlayerTheme {
         SongDetailsScreen(
-            viewModel = viewModel(factory = AppViewModel.factory),
-            context = LocalContext.current
+            uiState = MusicPlayerUiState()
         )
     }
 }

@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.*
 import kotlin.random.Random
 
 private const val TAG = "AppViewModel"
+
 class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     private val mediaPlayer = songsRepository.player
@@ -30,6 +31,10 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     private var job: Job? = null
     val uiState = songsRepository.uiState
 
+    init {
+        startProgressSlider()
+    }
+
     fun updateUiState(
         song: Song? = null,
         isPlaying: Boolean? = null,
@@ -38,7 +43,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         isShuffling: Boolean? = null,
         isSongChosen: Boolean? = null,
         playbackStarted: Long? = null,
-        isHomeScreen: Boolean? = null
+        isHomeScreen: Boolean? = null,
+        currentPosition: Float? = null
     ) {
         songsRepository.updateUiState(
             song = song,
@@ -48,7 +54,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             isShuffling = isShuffling,
             isSongChosen = isSongChosen,
             playbackStarted = playbackStarted,
-            isHomeScreen = isHomeScreen
+            isHomeScreen = isHomeScreen,
+            currentPosition = currentPosition
         )
     }
 
@@ -57,7 +64,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         viewModelScope.launch {
             updateUiState(
                 currentIndex = songs.indexOf(song),
-                isSongChosen = true
+                isSongChosen = true,
+                isHomeScreen = false
             )
             when {
                 song == uiState.value.song && uiState.value.isPlaying -> {}
@@ -66,25 +74,22 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
                 }
                 song != uiState.value.song -> {
                     cancel(context)
-                    updateUiState(song = song)
+                    updateUiState(song = song, currentPosition = 0f)
                     play(context)
                 }
             }
-            isHomeScreen.value = !isHomeScreen.value
         }
     }
 
-    init {
-        startProgressSlider()
-    }
 
-    fun startProgressSlider() {
+    private fun startProgressSlider() {
         job?.cancel()
         if (!mediaPlayer.isPlaying) return
         job = viewModelScope.launch {
             while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
-                currentPosition.value = mediaPlayer.currentPosition.toFloat()
+                updateUiState(currentPosition = mediaPlayer.currentPosition.toFloat())
                 delay(250)
+
             }
         }
     }
@@ -103,7 +108,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
                 } else (uiState.value.currentIndex + 1) % songs.size
                 updateUiState(
                     song = songs[newIndex],
-                    currentIndex = newIndex
+                    currentIndex = newIndex,
+                    currentPosition = 0f
                 )
                 cancel(context)
                 play(context)
@@ -121,7 +127,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             val nSong = songs[newIndex]
             updateUiState(
                 song = nSong,
-                currentIndex = newIndex % songs.size
+                currentIndex = newIndex % songs.size,
+                currentPosition = 0f
             )
             cancel(context)
             play(context)
@@ -136,7 +143,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         createNotification(context)
     }
 
-    fun play(context: Context) {
+    private fun play(context: Context) {
         cancel(context)
         mediaPlayer.apply {
             setAudioAttributes(
@@ -148,6 +155,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             setOnCompletionListener { nextSong(context) }
             setDataSource(context, uiState.value.song.uri)
             prepare()
+            seekTo(uiState.value.currentPosition.toInt())
             start()
         }
         updateUiState(isPlaying = true)
@@ -156,6 +164,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     private fun createNotification(context: Context) {
+        Log.d(TAG, "createNotification()")
         val intent = Intent(context, PlaybackService::class.java)
         ContextCompat.startForegroundService(context, intent)
     }
@@ -169,45 +178,34 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun continuePlaying(context: Context) {
+        Log.d(TAG, "continuePlaying()")
+        val currPos = if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition else 0
 
-        viewModelScope.launch {
-            val currPos = if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition else 0
+        mediaPlayer.reset()
 
-            mediaPlayer.reset()
-
-            mediaPlayer.apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .build()
-                )
-                setOnCompletionListener { nextSong(context) }
-                setDataSource(context, uiState.value.song.uri)
-                prepare()
-                seekTo(currPos)
-                start()
-            }
-            updateUiState(isPlaying = true)
-            startProgressSlider()
-            createNotification(context)
+        mediaPlayer.apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .build()
+            )
+            setOnCompletionListener { nextSong(context) }
+            setDataSource(context, uiState.value.song.uri)
+            prepare()
+            seekTo(currPos)
+            start()
         }
+        updateUiState(isPlaying = true)
+        startProgressSlider()
+        createNotification(context)
     }
 
-    fun updateTimestamp(newTimestamp: Float) {
+    fun updateCurrentPosition(newPosition: Float) {
         viewModelScope.launch {
-            updateUiState(timestamp = newTimestamp)
-            currentPosition.value = newTimestamp
-            mediaPlayer.seekTo(kotlin.math.floor(newTimestamp).toInt())
-        }
-    }
-
-    companion object {
-        val factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application = this[APPLICATION_KEY] as MusicPlayerApplication
-                AppViewModel(application.container.songsRepository)
-            }
+            updateUiState(currentPosition = newPosition)
+            currentPosition.value = newPosition
+            mediaPlayer.seekTo(kotlin.math.floor(newPosition).toInt())
         }
     }
 }

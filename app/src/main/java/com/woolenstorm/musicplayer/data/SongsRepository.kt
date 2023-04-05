@@ -9,6 +9,7 @@ import com.woolenstorm.musicplayer.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.text.FieldPosition
 
 class SongsRepository(context: Context) {
 
@@ -27,6 +28,7 @@ class SongsRepository(context: Context) {
                 uri = Uri.parse(sharedPreferences.getString(KEY_URI, "") ?: "") ?: Uri.EMPTY,
                 duration = sharedPreferences.getFloat(KEY_DURATION, 0f),
                 title = sharedPreferences.getString(KEY_TITLE, defaultTitle) ?: defaultTitle,
+                path = sharedPreferences.getString(KEY_SONG_PATH, "") ?: "",
                 artist = sharedPreferences.getString(KEY_ARTIST, defaultArtist) ?: defaultArtist,
                 album = sharedPreferences.getString(KEY_ALBUM, "") ?: "",
                 albumArtworkUri = sharedPreferences.getString(KEY_ALBUM_ARTWORK, "") ?: ""
@@ -36,7 +38,9 @@ class SongsRepository(context: Context) {
             currentIndex = sharedPreferences.getInt(KEY_CURRENT_INDEX, 0),
             isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false),
             isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false),
-            isHomeScreen = sharedPreferences.getBoolean(KEY_IS_HOMESCREEN, true)
+            isHomeScreen = sharedPreferences.getBoolean(KEY_IS_HOMESCREEN, true),
+            currentPosition = if (player.currentPosition < player.duration) player.currentPosition.toFloat()
+            else 0f
         )
     }
 
@@ -48,7 +52,8 @@ class SongsRepository(context: Context) {
         isShuffling: Boolean? = null,
         isSongChosen: Boolean? = null,
         playbackStarted: Long? = null,
-        isHomeScreen: Boolean? = null
+        isHomeScreen: Boolean? = null,
+        currentPosition: Float? = null
     ) {
         _uiState.update {
             MusicPlayerUiState(
@@ -58,9 +63,9 @@ class SongsRepository(context: Context) {
                 currentIndex = currentIndex ?: uiState.value.currentIndex,
                 isShuffling = isShuffling ?: uiState.value.isShuffling,
                 isSongChosen = isSongChosen ?: uiState.value.isSongChosen,
-                currentPosition = player.currentPosition,
+                currentPosition = currentPosition ?: uiState.value.currentPosition,
                 playbackStarted = playbackStarted ?: uiState.value.playbackStarted,
-                isHomeScreen = isHomeScreen ?: uiState.value.isHomeScreen
+                isHomeScreen = isHomeScreen ?: uiState.value.isHomeScreen,
             )
         }
     }
@@ -73,6 +78,7 @@ class SongsRepository(context: Context) {
             putInt(KEY_CURRENT_INDEX, uiState.value.currentIndex)
             putBoolean(KEY_IS_SHUFFLING, uiState.value.isShuffling)
             putString(KEY_URI, uiState.value.song.uri.toString())
+            putString(KEY_SONG_PATH, uiState.value.song.path)
             putFloat(KEY_DURATION, uiState.value.song.duration)
             putString(KEY_TITLE, uiState.value.song.title)
             putString(KEY_ARTIST, uiState.value.song.artist)
