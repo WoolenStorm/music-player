@@ -3,8 +3,10 @@ package com.woolenstorm.musicplayer.data
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import androidx.room.Room
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
+import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +20,10 @@ class SongsRepository(context: Context) {
     var songs = musicApi.getSongs()
     private var _uiState = MutableStateFlow(MusicPlayerUiState())
     val uiState = _uiState.asStateFlow()
+    private var _currentPlaylist = MutableStateFlow<Playlist?>(null)
+    val currentPlaylist = _currentPlaylist.asStateFlow()
+
+    val db = PlaylistsDatabase.getDatabase(context.applicationContext)
 
     init {
         val sharedPreferences = context.getSharedPreferences(KEY_SONG_INFO_FILE, Context.MODE_PRIVATE)
@@ -39,9 +45,14 @@ class SongsRepository(context: Context) {
             isShuffling = sharedPreferences.getBoolean(KEY_IS_SHUFFLING, false),
             isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false),
             isHomeScreen = sharedPreferences.getBoolean(KEY_IS_HOMESCREEN, true),
+            playlistId = sharedPreferences.getInt(KEY_PLAYLIST_ID, -1),
             currentPosition = if (player.currentPosition < player.duration) player.currentPosition.toFloat()
             else 0f
         )
+    }
+
+    fun updateCurrentPlaylist(newPlaylist: Playlist?) {
+        _currentPlaylist.update { newPlaylist }
     }
 
     fun updateUiState(
@@ -53,7 +64,9 @@ class SongsRepository(context: Context) {
         isSongChosen: Boolean? = null,
         playbackStarted: Long? = null,
         isHomeScreen: Boolean? = null,
-        currentPosition: Float? = null
+        currentPosition: Float? = null,
+        isExpanded: Boolean? = null,
+        playlistId: Int? = null
     ) {
         _uiState.update {
             MusicPlayerUiState(
@@ -66,6 +79,8 @@ class SongsRepository(context: Context) {
                 currentPosition = currentPosition ?: uiState.value.currentPosition,
                 playbackStarted = playbackStarted ?: uiState.value.playbackStarted,
                 isHomeScreen = isHomeScreen ?: uiState.value.isHomeScreen,
+                isExpanded = isExpanded ?: uiState.value.isExpanded,
+                playlistId = playlistId ?: uiState.value.playlistId
             )
         }
     }
@@ -86,6 +101,7 @@ class SongsRepository(context: Context) {
             putString(KEY_ALBUM_ARTWORK, uiState.value.song.albumArtworkUri)
             putBoolean(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
             putBoolean(KEY_IS_HOMESCREEN, uiState.value.isHomeScreen)
+            putInt(KEY_PLAYLIST_ID, uiState.value.playlistId)
             apply()
         }
     }

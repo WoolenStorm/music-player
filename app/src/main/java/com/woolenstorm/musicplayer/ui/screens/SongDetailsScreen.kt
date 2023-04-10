@@ -2,30 +2,40 @@ package com.woolenstorm.musicplayer.ui.screens
 
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import java.io.FileNotFoundException
 
+private const val TAG = "SongDetailsScreen"
+
 @Composable
 fun SongDetailsScreen(
+    viewModel: AppViewModel,
     uiState: MusicPlayerUiState,
     modifier: Modifier = Modifier,
     onGoBack: () -> Unit = {},
@@ -34,8 +44,10 @@ fun SongDetailsScreen(
     onPause: () -> Unit = {},
     onPlayPrevious: () -> Unit = {},
     onPlayNext: () -> Unit = {},
-    onContinuePlaying: () -> Unit = {}
+    onContinuePlaying: () -> Unit = {},
+    isExpanded: Boolean = false
 ) {
+    Log.d(TAG, "SongDetailsScreen")
     BackHandler { onGoBack() }
 
     Surface(modifier = modifier.fillMaxSize()) {
@@ -46,24 +58,33 @@ fun SongDetailsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-            Spacer(modifier = Modifier.height(48.dp))
-            AlbumArtwork(uiState.song.albumArtworkUri)
-            Spacer(modifier = Modifier.height(24.dp))
-            SongTitleRow(uiState.song)
+            Spacer(modifier = Modifier.weight(.05f))
+            AlbumArtwork(
+                uiState.song.albumArtworkUri,
+                modifier = Modifier
+                    .weight(.65f)
+                    .align(Alignment.CenterHorizontally)
+            )
+            SongTitleRow(uiState.song, modifier = Modifier.weight(.2f))
             ShuffleButton(uiState = uiState, onToggleShuffle = onToggleShuffle)
             SongProgressSlider(
                 duration = uiState.song.duration,
-                value = uiState.currentPosition,
+                value = viewModel.currentPosition.collectAsState().value,
                 onValueChange = updateTimestamp,
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier
+                    .weight(.1f)
             )
-            ActionButtonsRow(
-                isPlaying = uiState.isPlaying,
-                onPause = onPause,
-                onContinuePlaying = onContinuePlaying,
-                onPlayPrevious = onPlayPrevious,
-                onPlayNext = onPlayNext
-            )
+
+            if (!isExpanded) {
+                ActionButtonsRow(
+                    isPlaying = uiState.isPlaying,
+                    onPause = onPause,
+                    onContinuePlaying = onContinuePlaying,
+                    onPlayPrevious = onPlayPrevious,
+                    onPlayNext = onPlayNext,
+                    modifier = Modifier.weight(.1f)
+                )
+            }
         }
     }
 }
@@ -105,7 +126,7 @@ fun AlbumArtwork(
             Image(
                 bitmap = source.asImageBitmap(),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         } else {
             Icon(
@@ -124,18 +145,60 @@ fun SongTitleRow(
     song: Song,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Row {
+        Column(modifier = modifier
+            .fillMaxWidth()
+            .align(Alignment.CenterVertically)) {
+            Text(
+                text = song.title,
+                style = MaterialTheme.typography.h5,
+                maxLines = 1,
+                modifier = Modifier.basicMarquee()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = song.artist,
+                style = MaterialTheme.typography.body1,
+                modifier = Modifier.basicMarquee()
+            )
+        }
+    }
+
+}
+
+@Composable
+fun SongProgressSlider(
+    duration: Float,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val minutesTotal = rememberSaveable { kotlin.math.floor(duration / 60000).toInt() }
+    val secondsTotal = rememberSaveable { kotlin.math.floor((duration - minutesTotal * 60000) / 1000).toInt() }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val minutesPlayed = kotlin.math.floor(value / 60000).toInt()
+        val secondsPlayed = kotlin.math.floor((value - minutesPlayed * 60000) / 1000).toInt()
         Text(
-            text = song.title,
-            style = MaterialTheme.typography.h5,
-            maxLines = 1,
-            modifier = Modifier.basicMarquee()
+            text = "${minutesPlayed}:${if (secondsPlayed >= 10) secondsPlayed else "0${secondsPlayed}"}",
+            style = MaterialTheme.typography.caption
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = song.artist,
-            style = MaterialTheme.typography.body1,
-            modifier = Modifier.basicMarquee()
+        Spacer(modifier = Modifier.width(4.dp))
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = (0f..duration),
+            enabled = true,
+            interactionSource = interactionSource,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = "$minutesTotal:${if (secondsTotal >= 10) secondsTotal else "0$secondsTotal"}",
+            style = MaterialTheme.typography.caption
         )
     }
 }
@@ -151,22 +214,24 @@ fun ActionButtonsRow(
 ) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
         Row {
+            Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = onPlayPrevious) {
                 Icon(
                 painter = painterResource(id = R.drawable.fast_rewind),
                     contentDescription = stringResource(
                         id = R.string.play_previous
                     ),
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .size(64.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(48.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             IconButton(
                 onClick = if (isPlaying) onPause else onContinuePlaying
@@ -176,11 +241,13 @@ fun ActionButtonsRow(
                         if (isPlaying) R.drawable.pause_circle else R.drawable.play_circle
                     ),
                     contentDescription = stringResource(id = R.string.toggle_is_playing),
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .size(64.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(48.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             IconButton(onClick = onPlayNext) {
                 Icon(
@@ -188,56 +255,46 @@ fun ActionButtonsRow(
                     contentDescription = stringResource(
                         id = R.string.play_next
                     ),
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .size(64.dp)
                 )
             }
+            Spacer(modifier = Modifier.weight(1f))
         }
 
     }
 }
 
+@Preview(showBackground = true, widthDp = 450, heightDp = 412)
 @Composable
-fun SongProgressSlider(
-    duration: Float,
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val minutesPlayed = kotlin.math.floor(value / 60000).toInt()
-        val minutesTotal = kotlin.math.floor(duration / 60000).toInt()
-        val secondsPlayed = kotlin.math.floor((value - minutesPlayed * 60000) / 1000).toInt()
-        val secondsTotal = kotlin.math.floor((duration - minutesTotal * 60000) / 1000).toInt()
-        Text(
-            text = "$minutesPlayed:${if (secondsPlayed >= 10) secondsPlayed else "0$secondsPlayed"}",
-            style = MaterialTheme.typography.caption
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-            valueRange = (0f..duration),
-            enabled = true,
-            modifier = Modifier.weight(1f)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(text = "$minutesTotal:${if (secondsTotal >= 10) secondsTotal else "0$secondsTotal"}",
-            style = MaterialTheme.typography.caption
+fun SongDetailsScreenPreviewNarrow() {
+    MusicPlayerTheme {
+        SongDetailsScreen(
+            uiState = MusicPlayerUiState(),
+            viewModel = viewModel(factory = AppViewModel.factory)
         )
     }
 }
 
-
-
 @Preview(showBackground = true)
 @Composable
-fun SongDetailsScreenPreview() {
+fun SongDetailsScreenPreviewNormal() {
     MusicPlayerTheme {
         SongDetailsScreen(
-            uiState = MusicPlayerUiState()
+            uiState = MusicPlayerUiState(),
+            viewModel = viewModel(factory = AppViewModel.factory)
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 780)
+@Composable
+fun SongDetailsScreenPreviewWide() {
+    MusicPlayerTheme {
+        SongDetailsScreen(
+            uiState = MusicPlayerUiState(),
+            viewModel = viewModel(factory = AppViewModel.factory)
         )
     }
 }

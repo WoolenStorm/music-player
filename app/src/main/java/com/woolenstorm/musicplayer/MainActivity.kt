@@ -9,6 +9,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,6 +20,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.Song
@@ -26,6 +28,8 @@ import com.woolenstorm.musicplayer.ui.MusicPlayerApp
 import com.woolenstorm.musicplayer.ui.screens.AppViewModel
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import java.io.File
+
+private const val TAG = "MainActivity"
 
 class MainActivity : ComponentActivity() {
 
@@ -35,6 +39,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Log.d(TAG, "MainActivity")
 
         val requestPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -58,9 +64,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     private fun initializeApp() {
 
-        songsRepository = (applicationContext as MusicPlayerApplication).container.songsRepository
-        viewModel = AppViewModel(songsRepository)
-        viewModel.isHomeScreen.value = intent.getBooleanExtra(KEY_IS_HOMESCREEN, true)
+        songsRepository = (applicationContext as MusicPlayerApplication).repository
+        viewModel = ViewModelProvider(this, AppViewModel.factory)[AppViewModel::class.java]
 
         setContent {
             val windowSize = calculateWindowSizeClass(activity = this)
@@ -71,16 +76,14 @@ class MainActivity : ComponentActivity() {
                 MusicPlayerApp(
                     viewModel = viewModel,
                     windowSize = windowSize.widthSizeClass,
-                    onSongClicked = { viewModel.onSongClicked(it, application) },
-                    removeSongFromViewModel = { viewModel.songs.remove(it) },
                     onPause = { viewModel.pause(application) },
                     onContinue = { viewModel.continuePlaying(application) },
                     onPlayNext = { viewModel.nextSong(application) },
                     onPlayPrevious = { viewModel.previousSong(application) },
                     onGoBack = { viewModel.updateUiState(isHomeScreen = true) },
-                    songs = viewModel.songs,
                     onToggleShuffle = { viewModel.onToggleShuffle(application) },
-                    updateTimestamp = { viewModel.updateCurrentPosition(it) },
+                    updateTimestamp = { viewModel.updateCurrentPosition(it, true) },
+                    updateCurrentScreen = { viewModel.updateCurrentScreen(it) },
                     onDelete = {
 
                         val index = songsRepository.songs.indexOf(it)

@@ -12,6 +12,11 @@
     <string name="no_permission_given">Не получилось загрузить твои песни :(</string>
     <string name="delete">Удалить</string>
     <string name="cancel">Отмена</string>
-    <string name="delete_dialog_text">Эта песня будет удалена безвозвратно.</string>
-    <string name="delete_dialog_title">Удалить эту песню?</string>
+    <string name="delete_song_dialog_text">Эта песня будет удалена безвозвратно.</string>
+    <string name="delete_song_dialog_title">Удалить эту песню?</string>
+    <string name="delete_playlist_dialog_text">Этот плейлист будет удалён безвозвратно.</string>
+    <string name="delete_playlist_dialog_title">Удалить этот плейлист?</string>
+    <string name="save">Сохранить</string>
+    <string name="enter_playlist_name">Новый плейлист</string>
+    <string name="playlist_name_placeholder">Название</string>
 </resources>

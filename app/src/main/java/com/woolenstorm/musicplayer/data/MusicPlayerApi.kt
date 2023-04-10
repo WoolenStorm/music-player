@@ -94,11 +94,9 @@ class DefaultMusicPlayerApi(private val context: Context) : MusicPlayerApi {
             }
         }
         Log.d(TAG, "songs found: ${list.size}")
-//        if (list.size >= 21) {
-//            (0..20).forEach {
-//                Log.d(TAG, "albumArtworkUri: ${list[it].artist} - ${list[it].title}")
-//            }
-//        }
+        (0 until list.size).forEach {
+            Log.d(TAG, "albumArtworkUri: ${list[it].artist} - ${list[it].title} (${list[it].id})")
+        }
         return list
     }
 }

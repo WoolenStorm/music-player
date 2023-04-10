@@ -2,6 +2,8 @@ package com.woolenstorm.musicplayer.ui.screens
 
 import android.net.Uri
 import android.os.Build
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -14,63 +16,45 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
+import com.woolenstorm.musicplayer.testListOfSongs
 
+private const val TAG = "HomeScreen"
 @Composable
 fun HomeScreen(
-    uiState: MusicPlayerUiState,
     songs: SnapshotStateList<Song>,
     modifier: Modifier = Modifier,
     removeSongFromViewModel: (Song) -> Unit = {},
     onSongClicked: (Song) -> Unit = {},
-    onOptionsClicked: (Song) -> Unit = {},
-    onPause: () -> Unit = {},
-    onPlayNext: () -> Unit = {},
-    onPlayPrevious: () -> Unit = {},
-    onContinue: () -> Unit = {}
+    onOptionsClicked: (Song) -> Unit = {}
 ) {
-    var dialogOpen by remember { mutableStateOf(false) }
+
+    Log.d(TAG, "HomeScreen")
+
+    val dialogOpen = remember { mutableStateOf(false) }
     var songToDelete by remember { mutableStateOf<Song?>(null) }
 
-    if (dialogOpen) {
-        AlertDialog(
-            onDismissRequest = { dialogOpen = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        songToDelete?.let {
-                            onOptionsClicked(it)
-                            if (Build.VERSION.SDK_INT < 30) removeSongFromViewModel(it)
-                        }
-                        dialogOpen = false
-                    }
-                ) {
-                    Text(text = stringResource(id = R.string.delete))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { dialogOpen = false }
-                ) {
-                    Text(text = stringResource(id = R.string.cancel))
-                }
-            },
-            title = { Text(stringResource(id = R.string.delete_dialog_title)) },
-            text = { Text(stringResource(id = R.string.delete_dialog_text)) }
+    if (dialogOpen.value) {
+        DeleteItemDialog(
+            deleteDialogVisible = dialogOpen,
+            songToDelete = songToDelete,
+            deleteSong = {
+                onOptionsClicked(it)
+                if (Build.VERSION.SDK_INT < 30) removeSongFromViewModel(it)
+            }
         )
     }
 
@@ -93,29 +77,13 @@ fun HomeScreen(
                             onSongClicked = { onSongClicked(it) },
                             onOptionsClicked = {
                                 songToDelete = it
-                                dialogOpen = true
+                                dialogOpen.value = true
                             },
                             modifier = Modifier.animateContentSize()
                         )
                     }
                 }
                 Spacer(modifier = Modifier.height(48.dp))
-            }
-
-            if (uiState.isSongChosen) {
-                CurrentPlayingSong(
-                    title = uiState.song.title,
-                    artist = uiState.song.artist,
-                    isPlaying = uiState.isPlaying,
-                    modifier = Modifier
-                        .background(MaterialTheme.colors.primaryVariant)
-                        .align(Alignment.BottomCenter),
-                    onPause = onPause,
-                    onContinue = onContinue,
-                    onPlayNext = onPlayNext,
-                    onPlayPrevious = onPlayPrevious,
-                    onSongClicked = { onSongClicked(uiState.song) }
-                )
             }
         }
     }
@@ -259,28 +227,7 @@ fun SongItemPreview() {
 fun HomeScreenPreview() {
     MusicPlayerTheme {
         HomeScreen(
-            uiState = MusicPlayerUiState(
-                song = Song(title = "Hellraiser", artist = "Attila"),
-                isPlaying = true,
-                isSongChosen = true
-            ),
-            songs = listOf(
-                Song(title = "Nothing Else Matters", artist = "Metallica"),
-                Song(title = "Enter Sandman", artist = "Metallica"),
-                Song(title = "Damage Inc.", artist = "Metallica"),
-                Song(title = "Master of Puppets", artist = "Metallica"),
-                Song(title = "Battery", artist = "Metallica"),
-                Song(title = "Symphony Of Destruction", artist = "Megadeth"),
-                Song(title = "Holy Wars.. The Punishment Due", artist = "Megadeth"),
-                Song(title = "Rust in Peace.. Polaris", artist = "Megadeth"),
-                Song(title = "Tornado Of Souls", artist = "Megadeth"),
-                Song(title = "This Was My Life", artist = "Megadeth"),
-                Song(title = "Angel Of Death", artist = "Slayer"),
-                Song(title = "Repentless", artist = "Slayer"),
-                Song(title = "You Against You", artist = "Slayer"),
-                Song(title = "Implode", artist = "Slayer"),
-                Song(title = "Bitter Peace", artist = "Slayer")
-            ).toMutableStateList()
+            songs = testListOfSongs
         )
     }
 }

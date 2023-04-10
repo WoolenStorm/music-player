@@ -19,9 +19,8 @@
         android:theme="@style/Theme.MusicPlayer"
         android:requestLegacyExternalStorage="true"
         tools:targetApi="33">
-        <service android:name="com.woolenstorm.musicplayer.model.PlaybackService" />
+        <service android:name="com.woolenstorm.musicplayer.communication.PlaybackService" />
         <activity
-            android:screenOrientation="portrait"
             android:configChanges="uiMode"
             android:name=".MainActivity"
             android:exported="true"

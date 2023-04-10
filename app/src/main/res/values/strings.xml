@@ -11,6 +11,11 @@
     <string name="no_permission_given">Cannot access your songs :(</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="delete_dialog_text">This song will be deleted permanently.</string>
-    <string name="delete_dialog_title">Delete this song?</string>
+    <string name="delete_song_dialog_text">This song will be deleted permanently.</string>
+    <string name="delete_song_dialog_title">Delete this song?</string>
+    <string name="delete_playlist_dialog_text">This playlist will be deleted permanently.</string>
+    <string name="delete_playlist_dialog_title">Delete this playlist?</string>
+    <string name="save">Save</string>
+    <string name="enter_playlist_name">New Playlist</string>
+    <string name="playlist_name_placeholder">Name</string>
 </resources>

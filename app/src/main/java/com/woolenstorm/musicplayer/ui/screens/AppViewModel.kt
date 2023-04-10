@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.woolenstorm.musicplayer.*
+import com.woolenstorm.musicplayer.communication.PlaybackService
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.*
 import kotlinx.coroutines.*
@@ -23,7 +24,14 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     private val mediaPlayer = songsRepository.player
     val songs = songsRepository.songs.toMutableStateList()
-    val isHomeScreen = mutableStateOf(true)
+
+    private val _currentScreen = MutableStateFlow(CurrentScreen.Songs)
+    val currentScreen = _currentScreen.asStateFlow()
+
+    private val _navigationType = MutableStateFlow(NavigationType.BottomNavigation)
+    private val navigationType = _navigationType.asStateFlow()
+    private val database = songsRepository.db
+
     val currentPosition = MutableStateFlow(
         if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition.toFloat()
         else 0f
@@ -31,8 +39,54 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     private var job: Job? = null
     val uiState = songsRepository.uiState
 
+    val playlists = database.playlistDao().getAll().map {
+        PlaylistsUiState(it)
+    }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = PlaylistsUiState()
+        )
+
+    private var _currentPlaylist = MutableStateFlow<Playlist?>(null)
+    val currentPlaylist = _currentPlaylist.asStateFlow()
+
     init {
         startProgressSlider()
+        if (uiState.value.playlistId != -1) {
+            val playlist = playlists.value.itemList.find {
+                it.id == uiState.value.playlistId
+            }
+            updateCurrentPlaylist(playlist)
+        }
+    }
+
+    fun updateCurrentScreen(newScreen: CurrentScreen) {
+        _currentScreen.update { newScreen }
+    }
+
+    fun updateCurrentPlaylist(newPlaylist: Playlist?) {
+        _currentPlaylist.update {
+            playlists.value.itemList.find {
+                it.id == newPlaylist?.id
+            }
+        }
+        songsRepository.updateCurrentPlaylist(currentPlaylist.value)
+    }
+
+    fun updateNavigationType(newNavigationType: NavigationType) {
+        _navigationType.update { newNavigationType }
+    }
+
+    suspend fun createPlaylist(name: String) {
+        database.playlistDao().insertPlaylist(Playlist(name = name))
+    }
+
+    suspend fun deletePlaylist(playlist: Playlist) {
+        database.playlistDao().delete(playlist)
+    }
+
+    suspend fun updatePlaylist(playlist: Playlist) {
+        database.playlistDao().updatePlaylist(playlist)
     }
 
     fun updateUiState(
@@ -44,7 +98,9 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         isSongChosen: Boolean? = null,
         playbackStarted: Long? = null,
         isHomeScreen: Boolean? = null,
-        currentPosition: Float? = null
+        currentPosition: Float? = null,
+        isExpanded: Boolean? = null,
+        playlistId: Int? = null
     ) {
         songsRepository.updateUiState(
             song = song,
@@ -55,28 +111,28 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             isSongChosen = isSongChosen,
             playbackStarted = playbackStarted,
             isHomeScreen = isHomeScreen,
-            currentPosition = currentPosition
+            currentPosition = currentPosition,
+            isExpanded = isExpanded,
+            playlistId = playlistId
         )
     }
 
 
     fun onSongClicked(song: Song, context: Context) {
-        viewModelScope.launch {
-            updateUiState(
-                currentIndex = songs.indexOf(song),
-                isSongChosen = true,
-                isHomeScreen = false
-            )
-            when {
-                song == uiState.value.song && uiState.value.isPlaying -> {}
-                song == uiState.value.song && !uiState.value.isPlaying -> {
-                    continuePlaying(context)
-                }
-                song != uiState.value.song -> {
-                    cancel(context)
-                    updateUiState(song = song, currentPosition = 0f)
-                    play(context)
-                }
+        updateUiState(
+            currentIndex = songs.indexOf(song),
+            isSongChosen = true,
+            isHomeScreen = navigationType.value == NavigationType.NavigationRail
+        )
+        when {
+            song == uiState.value.song && uiState.value.isPlaying -> {}
+            song == uiState.value.song && !uiState.value.isPlaying -> {
+                continuePlaying(context)
+            }
+            song != uiState.value.song -> {
+                cancel(context)
+                updateUiState(song = song, currentPosition = 0f)
+                play(context)
             }
         }
     }
@@ -87,7 +143,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         if (!mediaPlayer.isPlaying) return
         job = viewModelScope.launch {
             while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
-                updateUiState(currentPosition = mediaPlayer.currentPosition.toFloat())
+                updateCurrentPosition(newPosition = mediaPlayer.currentPosition.toFloat())
                 delay(250)
 
             }
@@ -101,38 +157,40 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun nextSong(context: Context) {
-        viewModelScope.launch {
-            if (songs.isNotEmpty()) {
-                val newIndex = if (uiState.value.isShuffling) {
-                    Random.nextInt(0, songs.size)
-                } else (uiState.value.currentIndex + 1) % songs.size
-                updateUiState(
-                    song = songs[newIndex],
-                    currentIndex = newIndex,
-                    currentPosition = 0f
-                )
-                cancel(context)
-                play(context)
-            }
-        }
-    }
-
-    fun previousSong(context: Context) {
-        viewModelScope.launch {
+        val currSongs = currentPlaylist.value?.let { playlist ->
+            songs.filter { song -> song.id in playlist.songsIds }
+        } ?: songs
+        if (currSongs.isNotEmpty()) {
             val newIndex = if (uiState.value.isShuffling) {
-                Random.nextInt(0, songs.size)
-            } else {
-                if (uiState.value.currentIndex <= 0) songs.size - 1 else uiState.value.currentIndex - 1
-            }
-            val nSong = songs[newIndex]
+                Random.nextInt(0, currSongs.size)
+            } else (uiState.value.currentIndex + 1) % currSongs.size
             updateUiState(
-                song = nSong,
-                currentIndex = newIndex % songs.size,
+                song = currSongs[newIndex],
+                currentIndex = newIndex,
                 currentPosition = 0f
             )
             cancel(context)
             play(context)
         }
+
+    }
+
+    fun previousSong(context: Context) {
+        val currSongs = currentPlaylist.value?.let { playlist ->
+            songs.filter { song -> song.id in playlist.songsIds }
+        } ?: songs
+        if (currSongs.isNotEmpty()) {
+            val newIndex = if (uiState.value.currentIndex <= 0) currSongs.size - 1 else uiState.value.currentIndex - 1
+            Log.d(TAG,"${uiState.value.currentIndex - 1} % ${currSongs.size} = $newIndex")
+            updateUiState(
+                song = currSongs[newIndex],
+                currentIndex = newIndex,
+                currentPosition = 0f
+            )
+            cancel(context)
+            play(context)
+        }
+
     }
 
     fun cancel(context: Context) {
@@ -170,11 +228,9 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun pause(context: Context) {
-        viewModelScope.launch {
             mediaPlayer.pause()
             createNotification(context)
             updateUiState(isPlaying = false)
-        }
     }
 
     fun continuePlaying(context: Context) {
@@ -201,11 +257,19 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
         createNotification(context)
     }
 
-    fun updateCurrentPosition(newPosition: Float) {
-        viewModelScope.launch {
-            updateUiState(currentPosition = newPosition)
-            currentPosition.value = newPosition
-            mediaPlayer.seekTo(kotlin.math.floor(newPosition).toInt())
+    fun updateCurrentPosition(newPosition: Float, fromSongDetails: Boolean = false) {
+        currentPosition.value = newPosition
+        if (fromSongDetails) mediaPlayer.seekTo(kotlin.math.floor(newPosition).toInt())
+    }
+
+    companion object {
+        val factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val repository = (this[APPLICATION_KEY] as MusicPlayerApplication).repository
+                AppViewModel(repository)
+            }
         }
     }
 }
+
+data class PlaylistsUiState(val itemList: List<Playlist> = listOf(), val playlist: Playlist? = null)
