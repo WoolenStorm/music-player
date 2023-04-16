@@ -15,7 +15,7 @@ private val DarkColorPalette = darkColors(
 )
 
 private val LightColorPalette = lightColors(
-    primary = DirtyPurple,
+    primary = Cocoa,
     primaryVariant = White35,
     surface = White25,
     onSurface = Cocoa

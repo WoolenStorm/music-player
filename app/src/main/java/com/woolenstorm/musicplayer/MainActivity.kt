@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
             val windowSize = calculateWindowSizeClass(activity = this)
             MusicPlayerTheme {
                 val systemUiController = rememberSystemUiController()
-                val statusBarColor = if (isSystemInDarkTheme()) Color(0xFF1C0A00) else Color(0xFFF8EDE3)
+                val statusBarColor = if (isSystemInDarkTheme()) Color(0xFF1C0A00) else Color(0xFF362217)
                 SideEffect { systemUiController.setSystemBarsColor(color = statusBarColor) }
                 MusicPlayerApp(
                     viewModel = viewModel,

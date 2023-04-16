@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,14 +34,8 @@ private const val TAG = "PlaylistsScreen"
 
 @Composable
 fun PlaylistsScreen(
-//    uiState: MusicPlayerUiState,
     modifier: Modifier = Modifier,
     navigationType: NavigationType = NavigationType.BottomNavigation,
-//    onPause: () -> Unit = {},
-//    onContinue: () -> Unit = {},
-//    onPlayNext: () -> Unit = {},
-//    onPlayPrevious: () -> Unit = {},
-//    onSongClicked: (Song) -> Unit = {},
     createPlaylist: () -> Unit = {},
     deletePlaylist: (Playlist) -> Unit = {},
     playlists: List<Playlist>,
@@ -86,25 +81,6 @@ fun PlaylistsScreen(
             }
             Spacer(modifier = Modifier.height(48.dp))
         }
-
-//        if (uiState.isSongChosen) {
-//            CurrentPlayingSong(
-//                title = uiState.song.title,
-//                artist = uiState.song.artist,
-//                isPlaying = uiState.isPlaying,
-//                modifier = Modifier
-//                    .background(MaterialTheme.colors.primaryVariant)
-//                    .align(Alignment.BottomCenter),
-//                onPause = onPause,
-//                onContinue = onContinue,
-//                onPlayNext = onPlayNext,
-//                onPlayPrevious = onPlayPrevious,
-//                onSongClicked = {
-//                    Log.d(TAG, "onSongClicked(${uiState.song})")
-//                    onSongClicked(uiState.song) }
-//            )
-//        }
-
         AddSomethingFloatingActionButton(
             onClick =  createPlaylist,
             modifier = Modifier.align(
@@ -191,7 +167,10 @@ fun PlaylistItem(
                     style = MaterialTheme.typography.h6,
                     textAlign = TextAlign.Start
                 )
-
+                Text(
+                    text = pluralStringResource(R.plurals.numberOfSongsAvailable, (playlist.songsIds.size % 10), playlist.songsIds.size),
+                    style = MaterialTheme.typography.caption
+                )
             }
 
             IconButton(
@@ -213,7 +192,6 @@ fun PlaylistItem(
 fun PlaylistsScreenPreview() {
     MusicPlayerTheme {
         PlaylistsScreen(
-//            uiState = MusicPlayerUiState(),
             playlists = testListOfPlaylists,
         )
     }

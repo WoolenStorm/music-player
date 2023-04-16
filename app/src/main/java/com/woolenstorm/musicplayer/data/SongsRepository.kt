@@ -100,7 +100,7 @@ class SongsRepository(context: Context) {
             putString(KEY_ALBUM, uiState.value.song.album)
             putString(KEY_ALBUM_ARTWORK, uiState.value.song.albumArtworkUri)
             putBoolean(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
-            putBoolean(KEY_IS_HOMESCREEN, uiState.value.isHomeScreen)
+            putBoolean(KEY_IS_HOMESCREEN, if (killed) true else uiState.value.isHomeScreen)
             putInt(KEY_PLAYLIST_ID, uiState.value.playlistId)
             apply()
         }

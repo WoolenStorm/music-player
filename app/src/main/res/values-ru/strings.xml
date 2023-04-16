@@ -19,4 +19,12 @@
     <string name="save">Сохранить</string>
     <string name="enter_playlist_name">Новый плейлист</string>
     <string name="playlist_name_placeholder">Название</string>
+    <plurals name="numberOfSongsAvailable">
+        <item quantity="one">%d песня</item>
+        <item quantity="few">%d песни</item>
+        <item quantity="many">%d песен</item>
+        <item quantity="other">%d песен</item>
+    </plurals>
+    <string name="all_songs">Твои песни</string>
+    <string name="all_playlists">Твои плейлисты</string>
 </resources>

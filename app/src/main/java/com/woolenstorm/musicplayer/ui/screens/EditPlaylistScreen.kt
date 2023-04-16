@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -41,30 +43,56 @@ fun EditPlaylistScreen(
     }
     if (playlist == null) onCancel()
     playlist?.let {
-        Surface(
-            modifier = modifier.fillMaxSize()
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 48.dp),
-                verticalArrangement = Arrangement.Top
-            ) {
-                items(songs) {
-                    AddSongItem(
-                        song = it,
-                        checked = it.id in chosenSongsIds,
-                        onCheckedChange = { value -> Boolean
-                            if (value) chosenSongsIds.add(it.id)
-                            else chosenSongsIds.remove(it.id)
-                        },
-                        onSongClicked = {
-                            if (it.id in chosenSongsIds) chosenSongsIds.remove(it.id)
-                            else chosenSongsIds.add(it.id)
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                val newPlaylist = playlist.copy(id = playlist.id, name = playlist.name, songsIds = chosenSongsIds)
+                                onSave(newPlaylist)
+                                onCancel()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = null
+                            )
                         }
-                    )
+                    },
+                    title = { Text(text = playlist.name) }
+                )
+            }
+        ) {
+            Surface(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(it)
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 48.dp),
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    items(songs) {
+                        AddSongItem(
+                            song = it,
+                            checked = it.id in chosenSongsIds,
+                            onCheckedChange = { value -> Boolean
+                                if (value) chosenSongsIds.add(it.id)
+                                else chosenSongsIds.remove(it.id)
+                            },
+                            onSongClicked = {
+                                if (it.id in chosenSongsIds) chosenSongsIds.remove(it.id)
+                                else chosenSongsIds.add(it.id)
+                            }
+                        )
+                    }
                 }
             }
         }
+
     }
 }
 

@@ -2,15 +2,17 @@ package com.woolenstorm.musicplayer.ui.screens
 
 import android.util.Log
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,6 +46,8 @@ fun TopLevelScreen(
     val uiState by viewModel.uiState.collectAsState()
     val songs = viewModel.songs
     val currentScreen = viewModel.currentScreen.collectAsState().value
+    val navBarHeight: Int by animateIntAsState(if (currentScreen == CurrentScreen.Songs || currentScreen == CurrentScreen.Playlists) 60 else 0)
+    val songDetailsSize: Float by animateFloatAsState(if (uiState.isHomeScreen) 0f else 1f)
 
     val navigationItemList = listOf(
         NavigationItemContent(
@@ -57,24 +61,39 @@ fun TopLevelScreen(
     )
 
     if (navigationType == NavigationType.BottomNavigation) {
-        Column(modifier = modifier.fillMaxSize()) {
-            AppContent(
-                viewModel = viewModel,
-                currentScreen = currentScreen,
-                navigationType = navigationType,
-                songs = songs,
-                playlists = viewModel.playlists.collectAsState().value.itemList,
-                createPlaylist = createPlaylist,
-                deletePlaylist = deletePlaylist,
-                onDeleteSong = onDelete,
-                modifier = Modifier.weight(1f),
-                onSavePlaylist = onSave
-            )
-            AnimatedVisibility(
-                visible = !uiState.isHomeScreen,
-                enter = fadeIn(initialAlpha = 0.4f),
-                exit = fadeOut(animationSpec = tween(250))
-            ) {
+
+        Crossfade(
+            targetState = uiState.isHomeScreen,
+            modifier = modifier.fillMaxSize()
+        ) { isHomeScreen ->
+            if (isHomeScreen) {
+                Column {
+                    Box(modifier = Modifier.weight(1f)) {
+                        AppContent(
+                            viewModel = viewModel,
+                            currentScreen = currentScreen,
+                            navigationType = navigationType,
+                            songs = songs,
+                            playlists = viewModel.playlists.collectAsState().value.itemList,
+                            createPlaylist = createPlaylist,
+                            deletePlaylist = deletePlaylist,
+                            onDeleteSong = onDelete,
+                            onSavePlaylist = onSave
+                        )
+                    }
+                    if (currentScreen in arrayOf(CurrentScreen.Songs, CurrentScreen.Playlists)) {
+                        MusicPlayerNavigationBar(
+                            navigationItemList = navigationItemList,
+                            currentScreen = currentScreen,
+                            onTabPressed = onTabPressed,
+                            modifier = Modifier.height(60.dp)
+                        )
+                    }
+
+                }
+
+
+            } else {
                 SongDetailsScreen(
                     viewModel = viewModel,
                     uiState = uiState,
@@ -87,14 +106,10 @@ fun TopLevelScreen(
                     updateTimestamp = updateTimestamp
                 )
             }
-            if (currentScreen == CurrentScreen.Songs || currentScreen == CurrentScreen.Playlists) {
-                MusicPlayerNavigationBar(
-                    navigationItemList = navigationItemList,
-                    currentScreen = currentScreen,
-                    onTabPressed = onTabPressed
-                )
-            }
+
+
         }
+
     } else {
         Row(modifier = modifier.fillMaxSize()) {
             if (currentScreen == CurrentScreen.Songs || currentScreen == CurrentScreen.Playlists) {
@@ -199,7 +214,7 @@ private data class NavigationItemContent(
 fun TopLevelScreenPreviewWide() {
     MusicPlayerTheme {
         TopLevelScreen(
-            navigationType = NavigationType.NavigationRail,
+            navigationType = NavigationType.BottomNavigation,
             onDelete = {},
             onPause = { },
             onContinue = {  },

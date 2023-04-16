@@ -24,10 +24,8 @@ import com.woolenstorm.musicplayer.model.Song
 
 private const val TAG = "PlaylistDetailsScreen"
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PlaylistDetailsScreen(
-    currentPlaylist: Playlist?,
     navigationType: NavigationType,
     playlistSongs: List<Song>,
     onGoBackToPlaylists: () -> Unit,
@@ -79,15 +77,6 @@ fun PlaylistDetailsScreen(
             contentAlignment = Alignment.BottomCenter
         ) {
             Column {
-                Text(
-                    text = currentPlaylist?.name ?: "",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                        .padding(16.dp)
-                        .basicMarquee(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.h5)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(

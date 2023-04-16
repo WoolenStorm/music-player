@@ -1,40 +1,25 @@
 package com.woolenstorm.musicplayer.ui
 
-import android.app.Activity
-import android.net.Uri
 import android.util.Log
-import android.widget.EditText
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import com.woolenstorm.musicplayer.CurrentScreen
 import com.woolenstorm.musicplayer.NavigationType
 import com.woolenstorm.musicplayer.R
-import com.woolenstorm.musicplayer.model.MusicPlayerUiState
-import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.screens.*
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 private const val TAG = "MusicPlayerApp"
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerApp(
     viewModel: AppViewModel,

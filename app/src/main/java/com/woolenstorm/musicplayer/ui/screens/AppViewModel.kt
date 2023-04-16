@@ -47,7 +47,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             initialValue = PlaylistsUiState()
         )
 
-    private var _currentPlaylist = MutableStateFlow<Playlist?>(null)
+    private var _currentPlaylist = MutableStateFlow(playlists.value.itemList.find { it.id == uiState.value.playlistId })
     val currentPlaylist = _currentPlaylist.asStateFlow()
 
     init {
