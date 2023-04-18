@@ -173,7 +173,6 @@ fun SongProgressSlider(
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     val minutesTotal = rememberSaveable { kotlin.math.floor(duration / 60000).toInt() }
     val secondsTotal = rememberSaveable { kotlin.math.floor((duration - minutesTotal * 60000) / 1000).toInt() }
 
@@ -193,8 +192,8 @@ fun SongProgressSlider(
             onValueChange = onValueChange,
             valueRange = (0f..duration),
             enabled = true,
-            interactionSource = interactionSource,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colors.secondary, activeTrackColor = MaterialTheme.colors.secondary)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(text = "$minutesTotal:${if (secondsTotal >= 10) secondsTotal else "0$secondsTotal"}",

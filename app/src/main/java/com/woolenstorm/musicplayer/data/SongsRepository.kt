@@ -3,6 +3,7 @@ package com.woolenstorm.musicplayer.data
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import android.util.Log
 import androidx.room.Room
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
@@ -12,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.text.FieldPosition
+
+private const val TAG = "SongsRepository"
 
 class SongsRepository(context: Context) {
 
@@ -101,7 +104,8 @@ class SongsRepository(context: Context) {
             putString(KEY_ALBUM_ARTWORK, uiState.value.song.albumArtworkUri)
             putBoolean(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
             putBoolean(KEY_IS_HOMESCREEN, if (killed) true else uiState.value.isHomeScreen)
-            putInt(KEY_PLAYLIST_ID, uiState.value.playlistId)
+            putInt(KEY_PLAYLIST_ID, if (killed) -1 else uiState.value.playlistId)
+            Log.d(TAG, "playlistId = ${uiState.value.playlistId}")
             apply()
         }
     }

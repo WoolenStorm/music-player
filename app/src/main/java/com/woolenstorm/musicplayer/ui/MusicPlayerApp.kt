@@ -8,6 +8,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.woolenstorm.musicplayer.CurrentScreen
@@ -19,25 +20,18 @@ import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import kotlinx.coroutines.launch
 
 private const val TAG = "MusicPlayerApp"
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun MusicPlayerApp(
     viewModel: AppViewModel,
     windowSize: WindowWidthSizeClass,
     onDelete: (Song) -> Unit,
-    onPause: () -> Unit,
-    onContinue: () -> Unit,
-    onPlayNext: () -> Unit,
-    onPlayPrevious: () -> Unit,
-    updateTimestamp: (Float) -> Unit,
-    onGoBack: () -> Unit,
-    onToggleShuffle: () -> Unit,
-    updateCurrentScreen: (CurrentScreen) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Log.d(TAG, "MusicPlayerApp")
 
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current.applicationContext
     val playlistName = rememberSaveable { mutableStateOf<String?>(null) }
     val isAddPlaylistDialogVisible = rememberSaveable { mutableStateOf(false) }
 
@@ -71,18 +65,27 @@ fun MusicPlayerApp(
             TopLevelScreen(
                 viewModel = viewModel,
                 navigationType = navigationType,
-                onTabPressed = updateCurrentScreen,
-                onPlayPrevious = onPlayPrevious,
-                onPause = onPause,
-                onPlayNext = onPlayNext,
-                onContinue = onContinue,
+                onTabPressed = { newScreen -> viewModel.updateCurrentScreen(newScreen) },
+                onPlayPrevious = { viewModel.previousSong(context) },
+                onPause = { viewModel.pause(context) },
+                onPlayNext = { viewModel.nextSong(context) },
+                onContinue = { viewModel.continuePlaying(context) },
                 onDelete = onDelete,
-                onToggleShuffle = onToggleShuffle,
-                updateTimestamp = updateTimestamp,
+                onToggleShuffle = { viewModel.onToggleShuffle(context) },
+                updateTimestamp = { timestamp -> viewModel.updateCurrentPosition(timestamp, true) },
                 createPlaylist = { isAddPlaylistDialogVisible.value = true },
                 deletePlaylist = { coroutineScope.launch { viewModel.deletePlaylist(it) } },
                 onSave = { playlist -> coroutineScope.launch { viewModel.updatePlaylist(playlist) } },
-                onGoBack = onGoBack
+                onGoBack = { viewModel.updateUiState(isHomeScreen = true) },
+                 deleteFromPlaylist = { idToDelete ->
+                     coroutineScope.launch {
+                         val newIds = viewModel.currentPlaylist.value?.songsIds?.filter { id -> id != idToDelete }
+                         viewModel.currentPlaylist.value?.let { playlist ->
+                             val newPlaylist = playlist.copy(id = playlist.id, name = playlist.name, songsIds = newIds ?: playlist.songsIds)
+                             viewModel.updatePlaylist(newPlaylist)
+                         }
+                     }
+                 }
             )
         }
     }

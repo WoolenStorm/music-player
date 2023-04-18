@@ -27,4 +27,6 @@
     </plurals>
     <string name="all_songs">Твои песни</string>
     <string name="all_playlists">Твои плейлисты</string>
+    <string name="delete_song_from_playlist_dialog_title">Удалить эту песню из плейлиста?</string>
+    <string name="delete_song_from_playlist_dialog_text">Эта песня останется в памяти устройства, но исчезнет из плейлиста.</string>
 </resources>

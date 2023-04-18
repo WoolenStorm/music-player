@@ -101,7 +101,7 @@ fun AddSomethingFloatingActionButton(
         onClick = onClick,
         modifier = modifier.padding(bottom = 60.dp, start = 8.dp, end = 8.dp),
         backgroundColor = MaterialTheme.colors.primaryVariant,
-        contentColor = MaterialTheme.colors.onSurface
+        contentColor = MaterialTheme.colors.secondary
     ) {
         Icon(painter = painterResource(id = icon), contentDescription = null)
     }

@@ -30,11 +30,10 @@ fun PlaylistDetailsScreen(
     playlistSongs: List<Song>,
     onGoBackToPlaylists: () -> Unit,
     onEditPlaylist: () -> Unit,
-    onOptionsClicked: (Song) -> Unit,
-    removeSongFromViewModel: (Song) -> Unit,
     onSongClicked: (Song) -> Unit,
     updateCurrentIndex: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    deleteFromPlaylist: (Long) -> Unit = { }
 ) {
     BackHandler {
         onGoBackToPlaylists()
@@ -50,8 +49,9 @@ fun PlaylistDetailsScreen(
                 TextButton(
                     onClick = {
                         songToDelete?.let {
-                            onOptionsClicked(it)
-                            if (Build.VERSION.SDK_INT < 30) removeSongFromViewModel(it)
+//                            onOptionsClicked(it)
+//                            if (Build.VERSION.SDK_INT < 30) removeSongFromViewModel(it)
+                            deleteFromPlaylist(it.id)
                         }
                         dialogOpen = false
                     }
@@ -66,8 +66,8 @@ fun PlaylistDetailsScreen(
                     Text(text = stringResource(id = R.string.cancel))
                 }
             },
-            title = { Text(stringResource(id = R.string.delete_song_dialog_title)) },
-            text = { Text(stringResource(id = R.string.delete_song_dialog_text)) }
+            title = { Text(stringResource(id = R.string.delete_song_from_playlist_dialog_title)) },
+            text = { Text(stringResource(id = R.string.delete_song_from_playlist_dialog_text)) }
         )
     }
 

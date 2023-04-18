@@ -76,14 +76,6 @@ class MainActivity : ComponentActivity() {
                 MusicPlayerApp(
                     viewModel = viewModel,
                     windowSize = windowSize.widthSizeClass,
-                    onPause = { viewModel.pause(application) },
-                    onContinue = { viewModel.continuePlaying(application) },
-                    onPlayNext = { viewModel.nextSong(application) },
-                    onPlayPrevious = { viewModel.previousSong(application) },
-                    onGoBack = { viewModel.updateUiState(isHomeScreen = true) },
-                    onToggleShuffle = { viewModel.onToggleShuffle(application) },
-                    updateTimestamp = { viewModel.updateCurrentPosition(it, true) },
-                    updateCurrentScreen = { viewModel.updateCurrentScreen(it) },
                     onDelete = {
 
                         val index = songsRepository.songs.indexOf(it)
@@ -150,9 +142,9 @@ class MainActivity : ComponentActivity() {
 
                 val intentSender = when {
 
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                        MediaStore.createDeleteRequest(contentResolver, listOf(songUri)).intentSender
-                    }
+//                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+//                        MediaStore.createDeleteRequest(contentResolver, listOf(songUri)).intentSender
+//                    }
 
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                         val recoverableSecurityException = e as? RecoverableSecurityException

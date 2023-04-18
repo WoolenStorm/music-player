@@ -40,14 +40,13 @@ fun TopLevelScreen(
     createPlaylist: () -> Unit,
     deletePlaylist: (Playlist) -> Unit,
     onSave: (Playlist) -> Unit = { },
-    onGoBack: () -> Unit = {}
+    onGoBack: () -> Unit = {},
+    deleteFromPlaylist: (Long) -> Unit = {}
 ) {
     Log.d(TAG, "TopLevelScreen")
     val uiState by viewModel.uiState.collectAsState()
     val songs = viewModel.songs
     val currentScreen = viewModel.currentScreen.collectAsState().value
-    val navBarHeight: Int by animateIntAsState(if (currentScreen == CurrentScreen.Songs || currentScreen == CurrentScreen.Playlists) 60 else 0)
-    val songDetailsSize: Float by animateFloatAsState(if (uiState.isHomeScreen) 0f else 1f)
 
     val navigationItemList = listOf(
         NavigationItemContent(
@@ -78,7 +77,8 @@ fun TopLevelScreen(
                             createPlaylist = createPlaylist,
                             deletePlaylist = deletePlaylist,
                             onDeleteSong = onDelete,
-                            onSavePlaylist = onSave
+                            onSavePlaylist = onSave,
+                            deleteFromPlaylist = deleteFromPlaylist
                         )
                     }
                     if (currentScreen in arrayOf(CurrentScreen.Songs, CurrentScreen.Playlists)) {
@@ -91,7 +91,6 @@ fun TopLevelScreen(
                     }
 
                 }
-
 
             } else {
                 SongDetailsScreen(
@@ -128,8 +127,9 @@ fun TopLevelScreen(
                 createPlaylist = createPlaylist,
                 deletePlaylist = deletePlaylist,
                 onDeleteSong = onDelete,
-                modifier = Modifier.weight(0.6f),
-                onSavePlaylist = onSave
+                onSavePlaylist = onSave,
+                deleteFromPlaylist = deleteFromPlaylist,
+                modifier = Modifier.weight(0.6f)
             )
             SongDetailsScreen(
                 viewModel = viewModel,

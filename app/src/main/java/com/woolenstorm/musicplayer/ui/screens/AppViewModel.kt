@@ -51,13 +51,12 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     val currentPlaylist = _currentPlaylist.asStateFlow()
 
     init {
-        startProgressSlider()
-        if (uiState.value.playlistId != -1) {
-            val playlist = playlists.value.itemList.find {
-                it.id == uiState.value.playlistId
+        viewModelScope.launch {
+            playlists.collectLatest {
+                _currentPlaylist.value = it.itemList.find { playlist -> playlist.id == uiState.value.playlistId }
             }
-            updateCurrentPlaylist(playlist)
         }
+        startProgressSlider()
     }
 
     fun updateCurrentScreen(newScreen: CurrentScreen) {
@@ -65,11 +64,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun updateCurrentPlaylist(newPlaylist: Playlist?) {
-        _currentPlaylist.update {
-            playlists.value.itemList.find {
-                it.id == newPlaylist?.id
-            }
-        }
+        _currentPlaylist.value = newPlaylist
         songsRepository.updateCurrentPlaylist(currentPlaylist.value)
     }
 
@@ -157,8 +152,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun nextSong(context: Context) {
-        val currSongs = currentPlaylist.value?.let { playlist ->
-            songs.filter { song -> song.id in playlist.songsIds }
+        val currSongs = currentPlaylist.value?.let {
+            songs.filter { song -> song.id in it.songsIds }
         } ?: songs
         if (currSongs.isNotEmpty()) {
             val newIndex = if (uiState.value.isShuffling) {
@@ -176,8 +171,8 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun previousSong(context: Context) {
-        val currSongs = currentPlaylist.value?.let { playlist ->
-            songs.filter { song -> song.id in playlist.songsIds }
+        val currSongs = currentPlaylist.value?.let {
+            songs.filter { song -> song.id in it.songsIds }
         } ?: songs
         if (currSongs.isNotEmpty()) {
             val newIndex = if (uiState.value.currentIndex <= 0) currSongs.size - 1 else uiState.value.currentIndex - 1
@@ -222,7 +217,6 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     private fun createNotification(context: Context) {
-        Log.d(TAG, "createNotification()")
         val intent = Intent(context, PlaybackService::class.java)
         ContextCompat.startForegroundService(context, intent)
     }

@@ -40,7 +40,8 @@ fun AppContent(
     createPlaylist: () -> Unit,
     deletePlaylist: (Playlist) -> Unit,
     onSavePlaylist: (Playlist) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    deleteFromPlaylist: (Long) -> Unit = {}
 ) {
     val currentPlaylist = playlists.find { it.id == viewModel.currentPlaylist.value?.id }
     val playlistSongsIds = currentPlaylist?.songsIds ?: emptyList()
@@ -53,10 +54,10 @@ fun AppContent(
         topBar = {
             when(currentScreen) {
                 CurrentScreen.Songs ->
-                    TopAppBar(title = {Text(stringResource(R.string.all_songs)) })
-                CurrentScreen.Playlists -> TopAppBar(title = {Text(stringResource(R.string.all_playlists)) })
+                    MusicTopAppBar(title = {Text(stringResource(R.string.all_songs)) })
+                CurrentScreen.Playlists -> MusicTopAppBar(title = {Text(stringResource(R.string.all_playlists)) })
                 CurrentScreen.PlaylistDetails ->
-                    TopAppBar(
+                    MusicTopAppBar(
                         navigationIcon = {
                             IconButton(
                                 onClick = { viewModel.updateCurrentScreen(CurrentScreen.Playlists) }
@@ -78,27 +79,6 @@ fun AppContent(
                         }
                     )
                 else -> {}
-//                CurrentScreen.EditPlaylist -> TopAppBar(
-//                    navigationIcon = {
-//                        IconButton(
-//                            onClick = { viewModel.updateCurrentScreen(CurrentScreen.Playlists) }
-//                        ) {
-//                            Icon(
-//                                imageVector = Icons.Filled.ArrowBack,
-//                                contentDescription = null
-//                            )
-//                        }
-//                    },
-//                    title = {
-//                        Text(
-//                            text = currentPlaylist?.name ?: "",
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .basicMarquee(),
-//                            textAlign = TextAlign.Start
-//                        )
-//                    }
-//                )
             }
         },
         backgroundColor = MaterialTheme.colors.surface
@@ -114,12 +94,13 @@ fun AppContent(
                     HomeScreen(
                         songs = songs,
                         modifier = modifier,
-                        onSongClicked = {
-                            viewModel.onSongClicked(it, context)
+                        onSongClicked = { song ->
+                            viewModel.onSongClicked(song, context)
                             viewModel.updateCurrentPlaylist(null)
+                            viewModel.updateUiState(playlistId = -1)
                         },
                         onOptionsClicked = onDeleteSong,
-                        removeSongFromViewModel = { viewModel.songs.remove(it) }
+                        removeSongFromViewModel = { song -> viewModel.songs.remove(song) }
                     )
                 CurrentScreen.Playlists ->
                     PlaylistsScreen(
@@ -130,6 +111,7 @@ fun AppContent(
                         deletePlaylist = deletePlaylist,
                         onPlaylistClicked = { playlist ->
                             viewModel.updateCurrentPlaylist(playlist)
+                            viewModel.updateUiState(playlistId = playlist.id)
                             viewModel.updateCurrentScreen(CurrentScreen.PlaylistDetails)
                         }
                     )
@@ -140,11 +122,10 @@ fun AppContent(
                         onGoBackToPlaylists = { viewModel.updateCurrentScreen(CurrentScreen.Playlists) },
                         onEditPlaylist = { viewModel.updateCurrentScreen(CurrentScreen.EditPlaylist) },
                         playlistSongs = playlistSongs,
-                        onSongClicked = { viewModel.onSongClicked(it, context) },
-                        onOptionsClicked = onDeleteSong,
-                        removeSongFromViewModel = { viewModel.songs.remove(it) },
-                        updateCurrentIndex = { viewModel.updateUiState(currentIndex = it) },
-                        modifier = modifier
+                        onSongClicked = { song -> viewModel.onSongClicked(song, context) },
+                        updateCurrentIndex = { index -> viewModel.updateUiState(currentIndex = index) },
+                        modifier = modifier,
+                        deleteFromPlaylist = deleteFromPlaylist
                     )
 
                 CurrentScreen.EditPlaylist ->
@@ -174,6 +155,19 @@ fun AppContent(
             }
         }
     }
+}
 
-
+@Composable
+fun MusicTopAppBar(
+    modifier: Modifier = Modifier,
+    title: @Composable () -> Unit = {},
+    navigationIcon: @Composable() (() -> Unit)? = {}
+) {
+    TopAppBar(
+        modifier = modifier,
+        title  = title,
+        navigationIcon = navigationIcon,
+        backgroundColor = MaterialTheme.colors.primaryVariant,
+        contentColor = MaterialTheme.colors.primary
+    )
 }

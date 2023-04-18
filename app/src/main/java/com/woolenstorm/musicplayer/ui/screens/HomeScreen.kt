@@ -173,7 +173,8 @@ fun CurrentPlayingSong(
             IconButton(onClick = onPlayPrevious) {
                 Icon(
                     painter = painterResource(id = R.drawable.fast_rewind),
-                    contentDescription = stringResource(id = R.string.play_previous)
+                    contentDescription = stringResource(id = R.string.play_previous),
+                    tint = MaterialTheme.colors.secondary
                 )
             }
             IconButton(
@@ -183,14 +184,16 @@ fun CurrentPlayingSong(
                     painter = painterResource(
                         id = if (isPlaying) R.drawable.pause_circle else R.drawable.play_circle
                     ),
-                    contentDescription = stringResource(id = R.string.toggle_is_playing)
+                    contentDescription = stringResource(id = R.string.toggle_is_playing),
+                    tint = MaterialTheme.colors.secondary
                 )
             }
 
             IconButton(onClick = onPlayNext) {
                 Icon(
                     painter = painterResource(id = R.drawable.fast_forward),
-                    contentDescription = stringResource(id = R.string.play_next)
+                    contentDescription = stringResource(id = R.string.play_next),
+                    tint = MaterialTheme.colors.secondary
                 )
             }
         }

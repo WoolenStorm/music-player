@@ -20,6 +20,8 @@
     <string name="playlist_name_placeholder">Name</string>
     <string name="all_songs">Your songs</string>
     <string name="all_playlists">Your playlists</string>
+    <string name="delete_song_from_playlist_dialog_title">Delete this song from playlist?</string>
+    <string name="delete_song_from_playlist_dialog_text">This song will still be in the device\'s memory, but will disappear from the playlist.</string>
     <plurals name="numberOfSongsAvailable">
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
