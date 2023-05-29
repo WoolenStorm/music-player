@@ -25,7 +25,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.MusicPlayerApp
-import com.woolenstorm.musicplayer.ui.screens.AppViewModel
+import com.woolenstorm.musicplayer.ui.AppViewModel
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import java.io.File
 

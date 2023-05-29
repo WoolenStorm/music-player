@@ -1,4 +1,4 @@
-package com.woolenstorm.musicplayer.ui.screens
+package com.woolenstorm.musicplayer.ui
 
 import android.content.Context
 import android.content.Intent

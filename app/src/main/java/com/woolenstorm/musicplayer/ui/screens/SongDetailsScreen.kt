@@ -8,9 +8,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.interaction.DragInteraction
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -18,7 +15,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,6 +25,7 @@ import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
+import com.woolenstorm.musicplayer.ui.AppViewModel
 import java.io.FileNotFoundException
 
 private const val TAG = "SongDetailsScreen"
