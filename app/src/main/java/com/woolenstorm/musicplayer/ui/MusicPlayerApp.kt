@@ -13,7 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.woolenstorm.musicplayer.NavigationType
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Song
-import com.woolenstorm.musicplayer.ui.screens.*
+import com.woolenstorm.musicplayer.ui.screens.topLevelScreen.TopLevelScreen
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import kotlinx.coroutines.launch
 
@@ -37,7 +37,6 @@ fun MusicPlayerApp(
         if (windowSize == WindowWidthSizeClass.Compact) NavigationType.BottomNavigation
         else NavigationType.NavigationRail
 
-    Log.d(TAG, "$navigationType")
     viewModel.updateNavigationType(navigationType)
     viewModel.updateUiState()
 
@@ -63,10 +62,10 @@ fun MusicPlayerApp(
             }
             TopLevelScreen(
                 viewModel = viewModel,
-                navigationType = navigationType,
+//                navigationType = navigationType,
                 onTabPressed = { newScreen -> viewModel.updateCurrentScreen(newScreen) },
                 onPlayPrevious = { viewModel.previousSong(context) },
-                onPause = { viewModel.pause(context) },
+//                onPause = { viewModel.pause(context) },
                 onPlayNext = { viewModel.nextSong(context) },
                 onContinue = { viewModel.continuePlaying(context) },
                 onDelete = onDelete,

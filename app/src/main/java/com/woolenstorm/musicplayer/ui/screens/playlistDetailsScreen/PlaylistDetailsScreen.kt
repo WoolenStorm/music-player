@@ -1,11 +1,8 @@
-package com.woolenstorm.musicplayer.ui.screens
+package com.woolenstorm.musicplayer.ui.screens.playlistDetailsScreen
 
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,18 +12,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.woolenstorm.musicplayer.NavigationType
 import com.woolenstorm.musicplayer.R
-import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song
+import com.woolenstorm.musicplayer.ui.AppViewModel
+import com.woolenstorm.musicplayer.ui.screens.playlistsScreen.AddSomethingFloatingActionButton
+import com.woolenstorm.musicplayer.ui.screens.homeScreen.SongItem
 
 private const val TAG = "PlaylistDetailsScreen"
 
 @Composable
 fun PlaylistDetailsScreen(
-    navigationType: NavigationType,
+    viewModel: AppViewModel,
     playlistSongs: List<Song>,
     onGoBackToPlaylists: () -> Unit,
     onEditPlaylist: () -> Unit,
@@ -49,8 +47,6 @@ fun PlaylistDetailsScreen(
                 TextButton(
                     onClick = {
                         songToDelete?.let {
-//                            onOptionsClicked(it)
-//                            if (Build.VERSION.SDK_INT < 30) removeSongFromViewModel(it)
                             deleteFromPlaylist(it.id)
                         }
                         dialogOpen = false
@@ -109,7 +105,7 @@ fun PlaylistDetailsScreen(
                 onClick = onEditPlaylist,
                 icon = R.drawable.edit,
                 modifier = Modifier.align(
-                    if (navigationType == NavigationType.BottomNavigation) Alignment.BottomEnd
+                    if (viewModel.navigationType.value == NavigationType.BottomNavigation) Alignment.BottomEnd
                     else Alignment.BottomStart
                 )
             )

@@ -4,6 +4,9 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.room.Room
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
@@ -23,6 +26,7 @@ class SongsRepository(context: Context) {
     var songs = musicApi.getSongs()
     private var _uiState = MutableStateFlow(MusicPlayerUiState())
     val uiState = _uiState.asStateFlow()
+//    var uiState by mutableStateOf(MusicPlayerUiState())
     private var _currentPlaylist = MutableStateFlow<Playlist?>(null)
     val currentPlaylist = _currentPlaylist.asStateFlow()
 

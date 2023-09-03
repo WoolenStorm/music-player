@@ -1,46 +1,34 @@
-package com.woolenstorm.musicplayer.ui.screens
+package com.woolenstorm.musicplayer.ui.screens.topLevelScreen
 
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import com.woolenstorm.musicplayer.CurrentScreen
-import com.woolenstorm.musicplayer.NavigationType
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.AppViewModel
+import com.woolenstorm.musicplayer.ui.screens.editPlaylistScreen.EditPlaylistScreen
+import com.woolenstorm.musicplayer.ui.screens.homeScreen.CurrentPlayingSong
+import com.woolenstorm.musicplayer.ui.screens.homeScreen.HomeScreen
+import com.woolenstorm.musicplayer.ui.screens.playlistDetailsScreen.PlaylistDetailsScreen
+import com.woolenstorm.musicplayer.ui.screens.playlistsScreen.PlaylistsScreen
 
 private const val TAG = "AppContent"
 
@@ -48,10 +36,6 @@ private const val TAG = "AppContent"
 @Composable
 fun AppContent(
     viewModel: AppViewModel,
-    currentScreen: CurrentScreen,
-    navigationType: NavigationType,
-    songs: MutableList<Song>,
-    playlists: List<Playlist>,
     onDeleteSong: (Song) -> Unit,
     createPlaylist: () -> Unit,
     deletePlaylist: (Playlist) -> Unit,
@@ -59,25 +43,26 @@ fun AppContent(
     modifier: Modifier = Modifier,
     deleteFromPlaylist: (Long) -> Unit = {}
 ) {
-    val currentPlaylist = playlists.find { it.id == viewModel.currentPlaylist.value?.id }
+    val currentPlaylist = viewModel.playlists.collectAsState().value.itemList
+        .find { it.id == viewModel.currentPlaylist.value?.id }
     val playlistSongsIds = currentPlaylist?.songsIds ?: emptyList()
-    val playlistSongs = songs.filter { it.id in playlistSongsIds }
+    val playlistSongs = viewModel.songs.filter { it.id in playlistSongsIds }
     val uiState = viewModel.uiState.collectAsState().value
-    val context = LocalContext.current
+    val context = LocalContext.current.applicationContext
     Log.d(TAG, "AppContent")
 
     Scaffold(
         modifier = modifier,
         topBar = {
-            when(currentScreen) {
+            when(viewModel.currentScreen.value) {
                 CurrentScreen.Songs ->
                     MusicTopAppBar(
                         viewModel = viewModel,
-                        title = {Text(stringResource(R.string.all_songs)) }
+                        title = { Text(stringResource(R.string.all_songs)) }
                     )
                 CurrentScreen.Playlists -> MusicTopAppBar(
                     viewModel = viewModel,
-                    title = {Text(stringResource(R.string.all_playlists)) }
+                    title = { Text(stringResource(R.string.all_playlists)) }
                 )
                 CurrentScreen.PlaylistDetails ->
                     MusicTopAppBar(
@@ -102,7 +87,7 @@ fun AppContent(
                             )
                         }
                     )
-                else -> {}
+                else -> { }
             }
         },
         backgroundColor = MaterialTheme.colors.surface
@@ -127,25 +112,16 @@ fun AppContent(
                 contentAlignment = Alignment.BottomCenter
             ) {
 
-                when (currentScreen) {
+                when (viewModel.currentScreen.value) {
                     CurrentScreen.Songs ->
                         HomeScreen(
-//                            viewModel = viewModel,
-                            songs = viewModel.songs,
-//                            modifier = modifier,
-                            onSongClicked = { song ->
-                                viewModel.onSongClicked(song, context)
-                                viewModel.updateCurrentPlaylist(null)
-                                viewModel.updateUiState(playlistId = -1)
-                            },
+                            viewModel = viewModel,
                             onOptionsClicked = onDeleteSong,
-                            removeSongFromViewModel = { song -> viewModel.songs.remove(song) }
                         )
                     CurrentScreen.Playlists ->
                         PlaylistsScreen(
-                            navigationType = navigationType,
+                            viewModel = viewModel,
                             modifier = modifier,
-                            playlists = playlists,
                             createPlaylist = createPlaylist,
                             deletePlaylist = deletePlaylist,
                             onPlaylistClicked = { playlist ->
@@ -157,7 +133,7 @@ fun AppContent(
 
                     CurrentScreen.PlaylistDetails ->
                         PlaylistDetailsScreen(
-                            navigationType = navigationType,
+                            viewModel = viewModel,
                             onGoBackToPlaylists = { viewModel.updateCurrentScreen(CurrentScreen.Playlists) },
                             onEditPlaylist = { viewModel.updateCurrentScreen(CurrentScreen.EditPlaylist) },
                             playlistSongs = playlistSongs,
@@ -169,8 +145,7 @@ fun AppContent(
 
                     CurrentScreen.EditPlaylist ->
                         EditPlaylistScreen(
-                            songs = songs,
-                            onCancel = { viewModel.updateCurrentScreen(CurrentScreen.PlaylistDetails) },
+                            viewModel = viewModel,
                             onSave = onSavePlaylist,
                             playlist = currentPlaylist,
                             modifier = modifier
@@ -194,6 +169,5 @@ fun AppContent(
                 }
             }
         }
-
     }
 }

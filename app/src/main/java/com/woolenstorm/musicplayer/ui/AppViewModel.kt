@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
@@ -11,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.woolenstorm.musicplayer.*
+import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.communication.PlaybackService
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.*
@@ -22,25 +24,26 @@ private const val TAG = "AppViewModel"
 
 class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
+    private val database = songsRepository.db
     private val mediaPlayer = songsRepository.player
+    private var job: Job? = null
+    val currentScreen = mutableStateOf(CurrentScreen.Songs)
+    val navigationType = mutableStateOf(NavigationType.BottomNavigation)
+    val currentPosition = mutableStateOf(if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition.toFloat() else 0f)
+    val uiState = songsRepository.uiState
+    val navigationItemList = listOf(
+        NavigationItemContent(
+            type = CurrentScreen.Songs,
+            icon = R.drawable.songs_icon
+        ),
+        NavigationItemContent(
+            type = CurrentScreen.Playlists,
+            icon = R.drawable.playlists_icon
+        )
+    )
+    var isSearching = mutableStateOf(false)
     var songs = songsRepository.songs.toMutableStateList()
         private set
-
-    private val _currentScreen = MutableStateFlow(CurrentScreen.Songs)
-    val currentScreen = _currentScreen.asStateFlow()
-
-    private val _navigationType = MutableStateFlow(NavigationType.BottomNavigation)
-    private val navigationType = _navigationType.asStateFlow()
-    private val database = songsRepository.db
-
-    val currentPosition = MutableStateFlow(
-        if (mediaPlayer.currentPosition < mediaPlayer.duration) mediaPlayer.currentPosition.toFloat()
-        else 0f
-    )
-    private var job: Job? = null
-    val uiState = songsRepository.uiState
-    var isSearching = mutableStateOf(false)
-
     val playlists = database.playlistDao().getAll().map {
         PlaylistsUiState(it)
     }.stateIn(
@@ -62,7 +65,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun updateCurrentScreen(newScreen: CurrentScreen) {
-        _currentScreen.update { newScreen }
+        currentScreen.value = newScreen
     }
 
     fun updateCurrentPlaylist(newPlaylist: Playlist?) {
@@ -71,7 +74,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun updateNavigationType(newNavigationType: NavigationType) {
-        _navigationType.update { newNavigationType }
+        navigationType.value = newNavigationType
     }
 
     suspend fun createPlaylist(name: String) {
@@ -150,12 +153,10 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     private fun startProgressSlider() {
         job?.cancel()
-        if (!mediaPlayer.isPlaying) return
         job = viewModelScope.launch {
-            while (mediaPlayer.isPlaying && mediaPlayer.currentPosition <= mediaPlayer.duration) {
+            while (mediaPlayer.currentPosition <= mediaPlayer.duration) {
                 updateCurrentPosition(newPosition = mediaPlayer.currentPosition.toFloat())
                 delay(250)
-
             }
         }
     }
@@ -282,3 +283,4 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 }
 
 data class PlaylistsUiState(val itemList: List<Playlist> = listOf(), val playlist: Playlist? = null)
+data class NavigationItemContent(val type: CurrentScreen, @DrawableRes val icon: Int)

@@ -75,34 +75,7 @@ class PlaybackService : Service() {
         super.onCreate()
     }
 
-//    private inner class CustomCallback : MediaSession.Callback {
-//        override fun onConnect(
-//            session: MediaSession,
-//            controller: MediaSession.ControllerInfo
-//        ): MediaSession.ConnectionResult {
-//            val connectionResult = super.onConnect(session, controller)
-//            val sessionCommands =
-//                connectionResult.availableSessionCommands
-//                    .buildUpon()
-//                    .add(SessionCommand("CLOSE_APP", Bundle()))
-//                    .build()
-//            return MediaSession.ConnectionResult.accept(
-//                sessionCommands, connectionResult.availablePlayerCommands
-//            )
-//        }
-//
-//        override fun onCustomCommand(
-//            session: MediaSession,
-//            controller: MediaSession.ControllerInfo,
-//            customCommand: SessionCommand,
-//            args: Bundle
-//        ): ListenableFuture<SessionResult> {
-//            if (customCommand.customAction == "CLOSE_APP") {
-//                sendBroadcast(closingIntent)
-//            }
-//            return super.onCustomCommand(session, controller, customCommand, args)
-//        }
-//    }
+
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
