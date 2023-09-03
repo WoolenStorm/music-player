@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,16 +12,28 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import com.woolenstorm.musicplayer.CurrentScreen
 import com.woolenstorm.musicplayer.NavigationType
@@ -37,7 +50,7 @@ fun AppContent(
     viewModel: AppViewModel,
     currentScreen: CurrentScreen,
     navigationType: NavigationType,
-    songs: SnapshotStateList<Song>,
+    songs: MutableList<Song>,
     playlists: List<Playlist>,
     onDeleteSong: (Song) -> Unit,
     createPlaylist: () -> Unit,
@@ -57,10 +70,17 @@ fun AppContent(
         topBar = {
             when(currentScreen) {
                 CurrentScreen.Songs ->
-                    MusicTopAppBar(title = {Text(stringResource(R.string.all_songs)) })
-                CurrentScreen.Playlists -> MusicTopAppBar(title = {Text(stringResource(R.string.all_playlists)) })
+                    MusicTopAppBar(
+                        viewModel = viewModel,
+                        title = {Text(stringResource(R.string.all_songs)) }
+                    )
+                CurrentScreen.Playlists -> MusicTopAppBar(
+                    viewModel = viewModel,
+                    title = {Text(stringResource(R.string.all_playlists)) }
+                )
                 CurrentScreen.PlaylistDetails ->
                     MusicTopAppBar(
+                        viewModel = viewModel,
                         navigationIcon = {
                             IconButton(
                                 onClick = { viewModel.updateCurrentScreen(CurrentScreen.Playlists) }
@@ -86,7 +106,9 @@ fun AppContent(
         },
         backgroundColor = MaterialTheme.colors.surface
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(it)) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(it)) {
 //            LazyRow() {
 //                items(
 //                    listOf(
@@ -107,7 +129,8 @@ fun AppContent(
                 when (currentScreen) {
                     CurrentScreen.Songs ->
                         HomeScreen(
-                            songs = songs,
+//                            viewModel = viewModel,
+                            songs = viewModel.songs,
                             modifier = modifier,
                             onSongClicked = { song ->
                                 viewModel.onSongClicked(song, context)
@@ -172,19 +195,4 @@ fun AppContent(
         }
 
     }
-}
-
-@Composable
-fun MusicTopAppBar(
-    modifier: Modifier = Modifier,
-    title: @Composable () -> Unit = {},
-    navigationIcon: @Composable() (() -> Unit)? = {}
-) {
-    TopAppBar(
-        modifier = modifier,
-        title  = title,
-        navigationIcon = navigationIcon,
-        backgroundColor = MaterialTheme.colors.primaryVariant,
-        contentColor = MaterialTheme.colors.primary
-    )
 }

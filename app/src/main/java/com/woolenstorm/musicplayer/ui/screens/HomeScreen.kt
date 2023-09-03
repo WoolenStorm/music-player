@@ -29,13 +29,15 @@ import androidx.compose.ui.unit.sp
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.R
+import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.testListOfSongs
+import com.woolenstorm.musicplayer.ui.AppViewModel
 
 private const val TAG = "HomeScreen"
 @Composable
 fun HomeScreen(
-    songs: SnapshotStateList<Song>,
+    songs: List<Song>,
     modifier: Modifier = Modifier,
     removeSongFromViewModel: (Song) -> Unit = {},
     onSongClicked: (Song) -> Unit = {},
@@ -230,6 +232,7 @@ fun SongItemPreview() {
 fun HomeScreenPreview() {
     MusicPlayerTheme {
         HomeScreen(
+//            viewModel = AppViewModel.factory.create(AppViewModel::class.java),
             songs = testListOfSongs
         )
     }

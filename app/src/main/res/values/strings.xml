@@ -26,4 +26,5 @@
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
     </plurals>
+    <string name="song_search_prompt">What do you want to listen to?</string>
 </resources>

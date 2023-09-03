@@ -23,7 +23,8 @@ private const val TAG = "AppViewModel"
 class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     private val mediaPlayer = songsRepository.player
-    val songs = songsRepository.songs.toMutableStateList()
+    var songs = songsRepository.songs.toMutableStateList()
+        private set
 
     private val _currentScreen = MutableStateFlow(CurrentScreen.Songs)
     val currentScreen = _currentScreen.asStateFlow()
@@ -38,6 +39,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     )
     private var job: Job? = null
     val uiState = songsRepository.uiState
+    var isSearching = mutableStateOf(false)
 
     val playlists = database.playlistDao().getAll().map {
         PlaylistsUiState(it)
@@ -82,6 +84,19 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
 
     suspend fun updatePlaylist(playlist: Playlist) {
         database.playlistDao().updatePlaylist(playlist)
+    }
+
+    fun filterSongs(input: String) {
+        songs.clear()
+        songs.addAll(songsRepository.songs)
+
+        if (input.isEmpty()) {
+            return
+        } else {
+            songs.removeIf {
+                !it.title.lowercase().contains(input.lowercase()) && !it.artist.lowercase().contains(input.lowercase())
+            }
+        }
     }
 
     fun updateUiState(
