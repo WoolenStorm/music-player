@@ -67,6 +67,7 @@ fun AppContent(
     Log.d(TAG, "AppContent")
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             when(currentScreen) {
                 CurrentScreen.Songs ->
@@ -106,7 +107,7 @@ fun AppContent(
         },
         backgroundColor = MaterialTheme.colors.surface
     ) {
-        Column(modifier = Modifier
+        Column(modifier = modifier
             .fillMaxSize()
             .padding(it)) {
 //            LazyRow() {
@@ -120,7 +121,7 @@ fun AppContent(
 //                }
 //            }
             Box(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(it),
                 contentAlignment = Alignment.BottomCenter
@@ -131,7 +132,7 @@ fun AppContent(
                         HomeScreen(
 //                            viewModel = viewModel,
                             songs = viewModel.songs,
-                            modifier = modifier,
+//                            modifier = modifier,
                             onSongClicked = { song ->
                                 viewModel.onSongClicked(song, context)
                                 viewModel.updateCurrentPlaylist(null)

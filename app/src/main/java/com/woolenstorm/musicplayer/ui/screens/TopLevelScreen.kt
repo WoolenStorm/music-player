@@ -106,6 +106,7 @@ fun TopLevelScreen(
         }
 
     } else {
+        Log.d(TAG, "Horizontal stuff")
         Row(modifier = modifier.fillMaxSize()) {
             if (currentScreen == CurrentScreen.Songs || currentScreen == CurrentScreen.Playlists) {
                 MusicPlayerNavigationRail(

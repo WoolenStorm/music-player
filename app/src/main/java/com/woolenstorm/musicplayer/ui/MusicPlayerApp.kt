@@ -37,6 +37,7 @@ fun MusicPlayerApp(
         if (windowSize == WindowWidthSizeClass.Compact) NavigationType.BottomNavigation
         else NavigationType.NavigationRail
 
+    Log.d(TAG, "$navigationType")
     viewModel.updateNavigationType(navigationType)
     viewModel.updateUiState()
 
