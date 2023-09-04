@@ -4,12 +4,10 @@ import android.app.*
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.media.MediaMetadata
 import android.media.MediaPlayer
-//import android.media.session.MediaSession
-import androidx.media3.session.MediaSession
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.os.IBinder
 import android.provider.MediaStore
 import android.support.v4.media.MediaMetadataCompat
@@ -18,13 +16,21 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.media3.session.SessionCommand
-import androidx.media3.session.SessionResult
-import com.google.common.util.concurrent.ListenableFuture
+import androidx.media.app.NotificationCompat.MediaStyle
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Song
+import com.woolenstorm.musicplayer.utils.ACTION_CLOSE
+import com.woolenstorm.musicplayer.utils.ACTION_PLAY_NEXT
+import com.woolenstorm.musicplayer.utils.ACTION_PLAY_PREVIOUS
+import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_PLAYING
+import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_SHUFFLING
+import com.woolenstorm.musicplayer.utils.CHANNEL_ID
+import com.woolenstorm.musicplayer.utils.CHANNEL_NAME
+import com.woolenstorm.musicplayer.utils.KEY_ACTION
+import com.woolenstorm.musicplayer.utils.KEY_APPLICATION_TAG
+import com.woolenstorm.musicplayer.utils.KEY_IS_HOMESCREEN
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import java.io.FileNotFoundException
@@ -35,20 +41,21 @@ class PlaybackService : Service() {
 
     private lateinit var controlsReceiver: ControlsReceiver
     private lateinit var mediaSession: MediaSessionCompat
-    private lateinit var mediaController: MediaControllerCompat
+//    private lateinit var mediaController: MediaControllerCompat
     private lateinit var songs: MutableList<Song>
     private lateinit var songsRepository: SongsRepository
     private lateinit var player: MediaPlayer
     private lateinit var uiState: StateFlow<MusicPlayerUiState>
     private val intentFilter = IntentFilter(KEY_APPLICATION_TAG)
-    val closingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_CLOSE)
-    private var mStateBuilder = PlaybackStateCompat.Builder()
-        .setActions(
-            PlaybackStateCompat.ACTION_PLAY or
-                    PlaybackStateCompat.ACTION_PAUSE or
-                    PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
-                    PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-        )
+    private val closingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_CLOSE)
+
+    private val toggleIsPlayingIntent = Intent(KEY_APPLICATION_TAG).putExtra(
+        KEY_ACTION,
+        ACTION_TOGGLE_IS_PLAYING
+    )
+
+    private val nextSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_NEXT)
+    private val prevSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_PREVIOUS)
 
     override fun onCreate() {
 
@@ -65,13 +72,114 @@ class PlaybackService : Service() {
         songs = songsRepository.songs
         player = MediaPlayer()
         uiState = songsRepository.uiState
+        mediaSession = MediaSessionCompat(this, "PlaybackService").apply {
+            setMetadata(
+                MediaMetadataCompat.Builder()
+                    .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
+                    .build()
+            )
+            setPlaybackState(
+                PlaybackStateCompat.Builder()
+                    .setState(PlaybackStateCompat.STATE_PLAYING, player.currentPosition.toLong(), 1f)
+                    .setActions(
+                        PlaybackStateCompat.ACTION_PLAY or
+                                PlaybackStateCompat.ACTION_PAUSE or
+                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                PlaybackStateCompat.ACTION_SEEK_TO
+                    )
+                    .build()
+            )
+            setCallback(object : MediaSessionCompat.Callback() {
+                override fun onPlay() {
+                    mediaSession.apply {
+                        setMetadata(
+                            MediaMetadataCompat.Builder()
+                                .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
+                                .build()
+                        )
+                        setPlaybackState(
+                            PlaybackStateCompat.Builder()
+                                .setState(PlaybackStateCompat.STATE_PLAYING, player.currentPosition.toLong(), 1f)
+                                .setActions(
+                                    PlaybackStateCompat.ACTION_PAUSE or
+                                            PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                            PlaybackStateCompat.ACTION_SEEK_TO
+                                )
+                                .build()
+                        )
+                    }
+                    sendBroadcast(toggleIsPlayingIntent)
+                    super.onPlay()
+                }
 
-        mediaSession = MediaSessionCompat(application, KEY_MEDIA_SESSION_TAG)
-        mediaSession.isActive = true
-        mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f)
-        mediaSession.setPlaybackState(mStateBuilder.build())
-        mediaController = MediaControllerCompat(application, mediaSession)
+                override fun onPause() {
+                    mediaSession.apply {
+                        setMetadata(
+                            MediaMetadataCompat.Builder()
+                                .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
+                                .build()
+                        )
+                        setPlaybackState(
+                            PlaybackStateCompat.Builder()
+                                .setState(PlaybackStateCompat.STATE_PAUSED, player.currentPosition.toLong(), 0f)
+                                .setActions(
+                                    PlaybackStateCompat.ACTION_PLAY or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                            PlaybackStateCompat.ACTION_SEEK_TO
+                                )
+                                .build()
+                        )
+                    }
+                    sendBroadcast(toggleIsPlayingIntent)
+                    super.onPause()
+                }
 
+                override fun onSkipToNext() {
+                    mediaSession.apply {
+                        setPlaybackState(
+                            PlaybackStateCompat.Builder()
+                                .setState(PlaybackStateCompat.STATE_PLAYING, 0, 0f)
+                                .setActions(
+                                    PlaybackStateCompat.ACTION_PAUSE or
+                                            PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                            PlaybackStateCompat.ACTION_SEEK_TO
+                                )
+                                .build()
+                        )
+                    }
+                    sendBroadcast(nextSongIntent)
+                    super.onSkipToNext()
+                }
+
+                override fun onSkipToPrevious() {
+                    mediaSession.apply {
+                        setPlaybackState(
+                            PlaybackStateCompat.Builder()
+                                .setState(PlaybackStateCompat.STATE_PAUSED, player.currentPosition.toLong(), 0f)
+                                .setActions(
+                                    PlaybackStateCompat.ACTION_PLAY or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                            PlaybackStateCompat.ACTION_SEEK_TO
+                                )
+                                .build()
+                        )
+                    }
+                    sendBroadcast(prevSongIntent)
+                    super.onSkipToPrevious()
+                }
+
+                override fun onSeekTo(pos: Long) {
+                    songsRepository.player.seekTo(pos.toInt())
+                }
+            })
+        }
         super.onCreate()
     }
 
@@ -79,12 +187,6 @@ class PlaybackService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        val nextSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_NEXT)
-        val prevSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_PREVIOUS)
-        val toggleIsPlayingIntent = Intent(KEY_APPLICATION_TAG).putExtra(
-            KEY_ACTION,
-            ACTION_TOGGLE_IS_PLAYING
-        )
         val toggleIsShufflingIntent = Intent(KEY_APPLICATION_TAG).putExtra(
             KEY_ACTION,
             ACTION_TOGGLE_IS_SHUFFLING
@@ -108,44 +210,6 @@ class PlaybackService : Service() {
         val pendingToggleIsShufflingIntent =
             PendingIntent.getBroadcast(application, 4, toggleIsShufflingIntent, flag)
 
-        mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-
-            override fun onPlay() {
-                Log.d(TAG, "onPlay()")
-                mediaSession.isActive = true
-                val playbackStateBuilder = mStateBuilder
-                    .setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f)
-                mediaSession.setPlaybackState(playbackStateBuilder.build())
-                super.onPlay()
-                sendBroadcast(toggleIsPlayingIntent)
-            }
-
-            override fun onPause() {
-                Log.d(TAG, "onPause()")
-                mediaSession.isActive = false
-//                stopForeground(STOP_FOREGROUND_DETACH)
-                val playbackStateBuilder = mStateBuilder
-                    .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0f)
-                mediaSession.setPlaybackState(playbackStateBuilder.build())
-                super.onPause()
-                sendBroadcast(toggleIsPlayingIntent)
-            }
-
-            override fun onSkipToNext() {
-                super.onSkipToNext()
-                sendBroadcast(nextSongIntent)
-            }
-
-            override fun onSkipToPrevious() {
-                super.onSkipToPrevious()
-                sendBroadcast(prevSongIntent)
-            }
-
-            override fun onCustomAction(action: String?, extras: Bundle?) {
-                sendBroadcast(closingIntent)
-                super.onCustomAction(action, extras)
-            }
-        })
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel =
@@ -165,15 +229,6 @@ class PlaybackService : Service() {
         } catch (e: FileNotFoundException) {
             getBitmapFromDrawable(applicationContext, R.drawable.album_artwork_placeholder)
         }
-
-        mediaSession.setMetadata(
-            MediaMetadataCompat.Builder()
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, uiState.value.song.artist)
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, uiState.value.song.title)
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, uiState.value.song.albumArtworkUri)
-                .build()
-        )
-
 
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -195,9 +250,7 @@ class PlaybackService : Service() {
             .setSilent(true)
             .setShowWhen(false)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_DEFERRED)
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSession.sessionToken)
-                .setShowActionsInCompactView(0, 1, 2)
+            .setStyle(MediaStyle().setMediaSession(mediaSession.sessionToken)
             )
             .build()
         if (File(uiState.value.song.path).exists()) startForeground(1, notification)

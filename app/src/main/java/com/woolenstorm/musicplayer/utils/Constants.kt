@@ -1,4 +1,4 @@
-package com.woolenstorm.musicplayer
+package com.woolenstorm.musicplayer.utils
 
 const val KEY_IS_SHUFFLING = "KEY_IS_SHUFFLING"
 const val KEY_ID = "KEY_ID"

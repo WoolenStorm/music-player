@@ -9,6 +9,27 @@ import android.media.AudioManager
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.woolenstorm.musicplayer.*
+import com.woolenstorm.musicplayer.utils.ACTION_CLOSE
+import com.woolenstorm.musicplayer.utils.ACTION_OPEN_NEW_ACTIVITY
+import com.woolenstorm.musicplayer.utils.ACTION_PLAY
+import com.woolenstorm.musicplayer.utils.ACTION_PLAY_NEXT
+import com.woolenstorm.musicplayer.utils.ACTION_PLAY_PREVIOUS
+import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_PLAYING
+import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_SHUFFLING
+import com.woolenstorm.musicplayer.utils.KEY_ACTION
+import com.woolenstorm.musicplayer.utils.KEY_ALBUM
+import com.woolenstorm.musicplayer.utils.KEY_ALBUM_ARTWORK
+import com.woolenstorm.musicplayer.utils.KEY_ARTIST
+import com.woolenstorm.musicplayer.utils.KEY_CURRENT_INDEX
+import com.woolenstorm.musicplayer.utils.KEY_DURATION
+import com.woolenstorm.musicplayer.utils.KEY_IS_HOMESCREEN
+import com.woolenstorm.musicplayer.utils.KEY_IS_PLAYING
+import com.woolenstorm.musicplayer.utils.KEY_IS_SHUFFLING
+import com.woolenstorm.musicplayer.utils.KEY_IS_SONG_CHOSEN
+import com.woolenstorm.musicplayer.utils.KEY_SONG_INFO_FILE
+import com.woolenstorm.musicplayer.utils.KEY_TIMESTAMP
+import com.woolenstorm.musicplayer.utils.KEY_TITLE
+import com.woolenstorm.musicplayer.utils.KEY_URI
 import kotlin.random.Random
 import kotlin.system.exitProcess
 

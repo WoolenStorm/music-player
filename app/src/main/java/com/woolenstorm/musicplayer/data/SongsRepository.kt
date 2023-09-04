@@ -4,18 +4,28 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.room.Room
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.model.MusicPlayerUiState
 import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song
+import com.woolenstorm.musicplayer.utils.KEY_ALBUM
+import com.woolenstorm.musicplayer.utils.KEY_ALBUM_ARTWORK
+import com.woolenstorm.musicplayer.utils.KEY_ARTIST
+import com.woolenstorm.musicplayer.utils.KEY_CURRENT_INDEX
+import com.woolenstorm.musicplayer.utils.KEY_DURATION
+import com.woolenstorm.musicplayer.utils.KEY_IS_HOMESCREEN
+import com.woolenstorm.musicplayer.utils.KEY_IS_PLAYING
+import com.woolenstorm.musicplayer.utils.KEY_IS_SHUFFLING
+import com.woolenstorm.musicplayer.utils.KEY_IS_SONG_CHOSEN
+import com.woolenstorm.musicplayer.utils.KEY_PLAYLIST_ID
+import com.woolenstorm.musicplayer.utils.KEY_SONG_INFO_FILE
+import com.woolenstorm.musicplayer.utils.KEY_SONG_PATH
+import com.woolenstorm.musicplayer.utils.KEY_TIMESTAMP
+import com.woolenstorm.musicplayer.utils.KEY_TITLE
+import com.woolenstorm.musicplayer.utils.KEY_URI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.text.FieldPosition
 
 private const val TAG = "SongsRepository"
 
