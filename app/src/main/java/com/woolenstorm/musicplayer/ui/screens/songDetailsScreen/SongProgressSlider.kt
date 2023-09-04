@@ -21,6 +21,7 @@ fun SongProgressSlider(
     duration: Float,
     value: Float,
     onValueChange: (Float) -> Unit,
+    synchronizeNotification: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val minutesTotal = floor(duration / 60000).toInt()
@@ -41,6 +42,7 @@ fun SongProgressSlider(
             value = value,
             onValueChange = onValueChange,
             valueRange = (0f..duration),
+            onValueChangeFinished = synchronizeNotification,
             enabled = true,
             modifier = Modifier.weight(1f),
             colors = SliderDefaults.colors(thumbColor = MaterialTheme.colors.secondary, activeTrackColor = MaterialTheme.colors.secondary)
@@ -60,7 +62,8 @@ fun SongProgressSliderPreview() {
         SongProgressSlider(
             duration = 273f,
             value = 100f,
-            onValueChange = { }
+            onValueChange = { },
+            synchronizeNotification = { }
         )
     }
 }

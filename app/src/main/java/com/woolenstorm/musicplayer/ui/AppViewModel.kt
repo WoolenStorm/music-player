@@ -56,16 +56,14 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     val currentPlaylist = _currentPlaylist.asStateFlow()
 
     init {
-    }
-
-    fun init(context: Context) {
         viewModelScope.launch {
             playlists.collectLatest {
                 _currentPlaylist.value = it.itemList.find { playlist -> playlist.id == uiState.value.playlistId }
             }
         }
-        startProgressSlider(context)
+        startProgressSlider()
     }
+
 
     fun updateCurrentScreen(newScreen: CurrentScreen) {
         currentScreen.value = newScreen
@@ -154,17 +152,19 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
 
-    private fun startProgressSlider(context: Context) {
+    private fun startProgressSlider() {
         job?.cancel()
         job = viewModelScope.launch {
             while (mediaPlayer.currentPosition <= mediaPlayer.duration) {
                 updateCurrentPosition(newPosition = mediaPlayer.currentPosition.toFloat())
                 delay(250)
 
-                // TODO: fix this nonsense pleeeeeeeeease
-                createNotification(context)
             }
         }
+    }
+
+    fun updateNotificationSlider(context: Context) {
+        createNotification(context = context)
     }
 
 
@@ -234,7 +234,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             start()
         }
         updateUiState(isPlaying = true)
-        startProgressSlider(context)
+        startProgressSlider()
         createNotification(context)
     }
 
@@ -269,7 +269,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             start()
         }
         updateUiState(isPlaying = true)
-        startProgressSlider(context)
+        startProgressSlider()
         createNotification(context)
     }
 

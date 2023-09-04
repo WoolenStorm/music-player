@@ -30,7 +30,16 @@ import com.woolenstorm.musicplayer.ui.AppViewModel
 import kotlinx.coroutines.delay
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import com.woolenstorm.musicplayer.MusicPlayerApplication
+import com.woolenstorm.musicplayer.data.SongsRepository
+import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 
 private const val TAG = "MusicTopAppBar"
 
@@ -42,26 +51,33 @@ fun MusicTopAppBar(
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable (() -> Unit)? = {}
 ) {
-    var isSearching by remember { viewModel.isSearching }
     var input by remember { mutableStateOf("") }
 
     val showKeyboard = remember { mutableStateOf(true) }
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     TopAppBar(
-        modifier = modifier.clickable { isSearching = !isSearching },
-        title  =
-        if (isSearching) {
+        modifier = modifier.clickable {
+            viewModel.isSearching.value = !viewModel.isSearching.value
+            if (!viewModel.isSearching.value) {
+                viewModel.filterSongs("")
+                keyboard?.hide()
+                input = ""
+            }
+        },
+        title =
+        if (viewModel.isSearching.value) {
             {
                 OutlinedTextField(
                     value = input,
                     placeholder = {
                         Text(
                             text = stringResource(id = R.string.song_search_prompt),
-                            color = MaterialTheme.colors.secondary
+                            color = MaterialTheme.colors.secondary,
                         )
                     },
                     modifier = Modifier.focusRequester(focusRequester),
+                    textStyle = MaterialTheme.typography.h6,
                     keyboardActions = KeyboardActions(
                         onDone = {
                             Log.d(TAG, "onDone()")
@@ -71,7 +87,6 @@ fun MusicTopAppBar(
                             input = ""
                         }
                     ),
-
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done
                     ),
@@ -103,7 +118,7 @@ fun MusicTopAppBar(
                 contentDescription = null,
                 modifier = Modifier
                     .aspectRatio(1f)
-                    .padding(8.dp)
+                    .padding(12.dp)
             )
         }
     )

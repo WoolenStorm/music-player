@@ -58,6 +58,9 @@ fun SongDetailsScreen(
                 duration = uiState.song.duration,
                 value = viewModel.currentPosition.value,
                 onValueChange = updateTimestamp,
+                synchronizeNotification = {
+                  viewModel.updateNotificationSlider(context)
+                },
                 modifier = Modifier.weight(.1f))
 
             if (!isExpanded) {

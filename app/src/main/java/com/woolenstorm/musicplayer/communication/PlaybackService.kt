@@ -45,7 +45,6 @@ class PlaybackService : Service() {
 
     private lateinit var controlsReceiver: ControlsReceiver
     private lateinit var mediaSession: MediaSessionCompat
-//    private lateinit var mediaController: MediaControllerCompat
     private lateinit var songs: MutableList<Song>
     private lateinit var songsRepository: SongsRepository
     private lateinit var player: MediaPlayer
@@ -304,25 +303,25 @@ class PlaybackService : Service() {
             .setColor(Color.BLACK)
             .setColorized(true)
             .build()
-        mediaSession.apply {
-            setMetadata(
-                MediaMetadataCompat.Builder()
-                    .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
-                    .build()
-            )
-            setPlaybackState(
-                PlaybackStateCompat.Builder()
-                    .setState(PlaybackStateCompat.STATE_PLAYING, songsRepository.player.currentPosition.toLong(), 1f)
-                    .setActions(
-                        PlaybackStateCompat.ACTION_PLAY or
-                                PlaybackStateCompat.ACTION_PAUSE or
-                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
-                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
-                                PlaybackStateCompat.ACTION_SEEK_TO
-                    )
-                    .build()
-            )
-        }
+//        mediaSession.apply {
+//            setMetadata(
+//                MediaMetadataCompat.Builder()
+//                    .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
+//                    .build()
+//            )
+//            setPlaybackState(
+//                PlaybackStateCompat.Builder()
+//                    .setState(PlaybackStateCompat.STATE_PLAYING, songsRepository.player.currentPosition.toLong(), 1f)
+//                    .setActions(
+//                        PlaybackStateCompat.ACTION_PLAY or
+//                                PlaybackStateCompat.ACTION_PAUSE or
+//                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+//                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+//                                PlaybackStateCompat.ACTION_SEEK_TO
+//                    )
+//                    .build()
+//            )
+//        }
         if (File(uiState.value.song.path).exists()) startForeground(1, notification)
 
         return START_NOT_STICKY

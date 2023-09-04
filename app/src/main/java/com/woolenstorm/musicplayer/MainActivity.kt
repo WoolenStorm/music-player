@@ -66,7 +66,6 @@ class MainActivity : ComponentActivity() {
 
         songsRepository = (applicationContext as MusicPlayerApplication).repository
         viewModel = ViewModelProvider(this, AppViewModel.factory)[AppViewModel::class.java]
-        viewModel.init(this)
 
         setContent {
             val windowSize = calculateWindowSizeClass(activity = this)
