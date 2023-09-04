@@ -3,6 +3,7 @@ package com.woolenstorm.musicplayer.communication
 import android.app.*
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.media.AudioManager
 import android.media.MediaMetadata
 import android.media.MediaPlayer
@@ -16,6 +17,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.media.app.NotificationCompat.MediaStyle
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.data.SongsRepository
@@ -182,15 +184,12 @@ class PlaybackService : Service() {
                 }
             })
         }
-
-
         super.onCreate()
     }
 
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "uiState.currentPosition: ${songsRepository.player.currentPosition.toLong()}")
 
         if (!songsRepository.player.isPlaying) {
             mediaSession.apply {
@@ -297,9 +296,33 @@ class PlaybackService : Service() {
             .setSilent(true)
             .setShowWhen(false)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_DEFERRED)
-            .setStyle(MediaStyle().setMediaSession(mediaSession.sessionToken)
+            .setStyle(
+                MediaStyle()
+                    .setMediaSession(mediaSession.sessionToken)
+                    .setShowActionsInCompactView(0, 1, 2)
             )
+            .setColor(Color.BLACK)
+            .setColorized(true)
             .build()
+        mediaSession.apply {
+            setMetadata(
+                MediaMetadataCompat.Builder()
+                    .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
+                    .build()
+            )
+            setPlaybackState(
+                PlaybackStateCompat.Builder()
+                    .setState(PlaybackStateCompat.STATE_PLAYING, songsRepository.player.currentPosition.toLong(), 1f)
+                    .setActions(
+                        PlaybackStateCompat.ACTION_PLAY or
+                                PlaybackStateCompat.ACTION_PAUSE or
+                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                PlaybackStateCompat.ACTION_SEEK_TO
+                    )
+                    .build()
+            )
+        }
         if (File(uiState.value.song.path).exists()) startForeground(1, notification)
 
         return START_NOT_STICKY
