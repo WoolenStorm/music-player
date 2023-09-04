@@ -31,9 +31,11 @@ import com.woolenstorm.musicplayer.utils.CHANNEL_NAME
 import com.woolenstorm.musicplayer.utils.KEY_ACTION
 import com.woolenstorm.musicplayer.utils.KEY_APPLICATION_TAG
 import com.woolenstorm.musicplayer.utils.KEY_IS_HOMESCREEN
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import java.io.FileNotFoundException
+import kotlin.coroutines.coroutineContext
 
 private const val TAG = "PlaybackService"
 
@@ -100,7 +102,7 @@ class PlaybackService : Service() {
                         )
                         setPlaybackState(
                             PlaybackStateCompat.Builder()
-                                .setState(PlaybackStateCompat.STATE_PLAYING, player.currentPosition.toLong(), 1f)
+                                .setState(PlaybackStateCompat.STATE_PLAYING, songsRepository.player.currentPosition.toLong(), 1f)
                                 .setActions(
                                     PlaybackStateCompat.ACTION_PAUSE or
                                             PlaybackStateCompat.ACTION_PLAY_PAUSE or
@@ -124,7 +126,7 @@ class PlaybackService : Service() {
                         )
                         setPlaybackState(
                             PlaybackStateCompat.Builder()
-                                .setState(PlaybackStateCompat.STATE_PAUSED, player.currentPosition.toLong(), 0f)
+                                .setState(PlaybackStateCompat.STATE_PAUSED, songsRepository.player.currentPosition.toLong(), 0f)
                                 .setActions(
                                     PlaybackStateCompat.ACTION_PLAY or
                                             PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
@@ -161,7 +163,7 @@ class PlaybackService : Service() {
                     mediaSession.apply {
                         setPlaybackState(
                             PlaybackStateCompat.Builder()
-                                .setState(PlaybackStateCompat.STATE_PAUSED, player.currentPosition.toLong(), 0f)
+                                .setState(PlaybackStateCompat.STATE_PAUSED, songsRepository.player.currentPosition.toLong(), 0f)
                                 .setActions(
                                     PlaybackStateCompat.ACTION_PLAY or
                                             PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
@@ -180,12 +182,57 @@ class PlaybackService : Service() {
                 }
             })
         }
+
+
         super.onCreate()
     }
 
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "uiState.currentPosition: ${songsRepository.player.currentPosition.toLong()}")
+
+        if (!songsRepository.player.isPlaying) {
+            mediaSession.apply {
+                setMetadata(
+                    MediaMetadataCompat.Builder()
+                        .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
+                        .build()
+                )
+                setPlaybackState(
+                    PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PAUSED, songsRepository.player.currentPosition.toLong(), 0f)
+                        .setActions(
+                            PlaybackStateCompat.ACTION_PLAY or
+                                    PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                    PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                    PlaybackStateCompat.ACTION_SEEK_TO
+                        )
+                        .build()
+                )
+            }
+        } else {
+
+            mediaSession.apply {
+                setMetadata(
+                    MediaMetadataCompat.Builder()
+                        .putLong(MediaMetadata.METADATA_KEY_DURATION, uiState.value.song.duration.toLong())
+                        .build()
+                )
+                setPlaybackState(
+                    PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PLAYING, songsRepository.player.currentPosition.toLong(), 1f)
+                        .setActions(
+                            PlaybackStateCompat.ACTION_PAUSE or
+                                    PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                                    PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                    PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                    PlaybackStateCompat.ACTION_SEEK_TO
+                        )
+                        .build()
+                )
+            }
+        }
 
         val toggleIsShufflingIntent = Intent(KEY_APPLICATION_TAG).putExtra(
             KEY_ACTION,
