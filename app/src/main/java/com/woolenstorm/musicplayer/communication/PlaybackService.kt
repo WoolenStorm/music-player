@@ -73,7 +73,7 @@ class PlaybackService : Service() {
         )
         songsRepository = (application as MusicPlayerApplication).repository
         songs = songsRepository.songs
-        player = MediaPlayer()
+        player = songsRepository.player
         uiState = songsRepository.uiState
         mediaSession = MediaSessionCompat(this, "PlaybackService").apply {
             setMetadata(
