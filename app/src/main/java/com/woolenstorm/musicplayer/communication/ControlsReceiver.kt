@@ -39,6 +39,7 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
 
     private val songsRepository = (application as MusicPlayerApplication).repository
     private val songs = songsRepository.songs
+    private val backlog = songsRepository.backlog
     private val player = songsRepository.player
     private val uiState = songsRepository.uiState
     private val playlist = songsRepository.currentPlaylist
@@ -95,6 +96,9 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
     }
 
     private fun nextSong() {
+        if (backlog.empty()) {
+            backlog.push(uiState.value.song)
+        }
         val currSongs = playlist.value?.let {
             songs.filter { song -> song.id in it.songsIds }
         } ?: songs
@@ -106,6 +110,7 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
             song = nSong,
             currentIndex = newIndex,
         )
+        backlog.push(nSong)
         play()
     }
 
@@ -113,12 +118,21 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
         val currSongs = playlist.value?.let {
             songs.filter { song -> song.id in it.songsIds }
         } ?: songs
-        val newIndex = if (uiState.value.currentIndex <= 0) currSongs.size - 1 else uiState.value.currentIndex - 1
-        val nSong = currSongs[newIndex]
-        songsRepository.updateUiState(
-            song = nSong,
-            currentIndex = newIndex
-        )
+        if (uiState.value.isShuffling && backlog.size >= 2) {
+            backlog.pop()
+            val nextSong = backlog.peek()
+            songsRepository.updateUiState(
+                song = nextSong,
+                currentIndex = currSongs.indexOf(nextSong)
+            )
+        } else {
+            val newIndex = if (uiState.value.currentIndex <= 0) currSongs.size - 1 else uiState.value.currentIndex - 1
+            val nSong = currSongs[newIndex]
+            songsRepository.updateUiState(
+                song = nSong,
+                currentIndex = newIndex
+            )
+        }
         play()
     }
 

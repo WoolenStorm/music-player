@@ -26,6 +26,7 @@ import com.woolenstorm.musicplayer.utils.KEY_URI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.util.Stack
 
 private const val TAG = "SongsRepository"
 
@@ -34,9 +35,9 @@ class SongsRepository(context: Context) {
     private val musicApi = DefaultMusicPlayerApi(context)
     val player = MediaPlayer()
     var songs = musicApi.getSongs()
+    var backlog: Stack<Song> = Stack()
     private var _uiState = MutableStateFlow(MusicPlayerUiState())
     val uiState = _uiState.asStateFlow()
-//    var uiState by mutableStateOf(MusicPlayerUiState())
     private var _currentPlaylist = MutableStateFlow<Playlist?>(null)
     val currentPlaylist = _currentPlaylist.asStateFlow()
 

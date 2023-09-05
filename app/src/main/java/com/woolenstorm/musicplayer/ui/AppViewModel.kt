@@ -44,6 +44,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     var isSearching = mutableStateOf(false)
     var songs = songsRepository.songs.toMutableStateList()
         private set
+    var backlog = songsRepository.backlog
     val playlists = database.playlistDao().getAll().map {
         PlaylistsUiState(it)
     }.stateIn(
@@ -174,6 +175,9 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
     }
 
     fun nextSong(context: Context) {
+        if (backlog.empty()) {
+            backlog.push(uiState.value.song)
+        }
         val currSongs = currentPlaylist.value?.let {
             songs.filter { song -> song.id in it.songsIds }
         } ?: songs
@@ -186,6 +190,7 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
                 currentIndex = newIndex,
                 currentPosition = 0f
             )
+            backlog.push(currSongs[newIndex])
             cancel(context)
             play(context)
         }
@@ -197,13 +202,23 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             songs.filter { song -> song.id in it.songsIds }
         } ?: songs
         if (currSongs.isNotEmpty()) {
-            val newIndex = if (uiState.value.currentIndex <= 0) currSongs.size - 1 else uiState.value.currentIndex - 1
-            Log.d(TAG,"${uiState.value.currentIndex - 1} % ${currSongs.size} = $newIndex")
-            updateUiState(
-                song = currSongs[newIndex],
-                currentIndex = newIndex,
-                currentPosition = 0f
-            )
+            if (uiState.value.isShuffling && backlog.size >= 2) {
+                backlog.pop()
+                val lastSong = backlog.peek()
+                updateUiState(
+                    song = lastSong,
+                    currentIndex = songs.indexOf(lastSong),
+                    currentPosition = 0f
+                )
+            } else {
+                val newIndex = if (uiState.value.currentIndex <= 0) currSongs.size - 1 else uiState.value.currentIndex - 1
+                Log.d(TAG,"${uiState.value.currentIndex - 1} % ${currSongs.size} = $newIndex")
+                updateUiState(
+                    song = currSongs[newIndex],
+                    currentIndex = newIndex,
+                    currentPosition = 0f
+                )
+            }
             cancel(context)
             play(context)
         }
