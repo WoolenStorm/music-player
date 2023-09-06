@@ -32,6 +32,7 @@ fun HomeScreen(
     var songToDelete by remember { mutableStateOf<Song?>(null) }
     val context = LocalContext.current.applicationContext
 
+
     if (dialogOpen.value) {
         DeleteItemDialog(
             deleteDialogVisible = dialogOpen,

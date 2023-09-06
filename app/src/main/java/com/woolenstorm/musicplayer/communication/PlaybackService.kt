@@ -57,7 +57,7 @@ class PlaybackService : Service() {
     private val toggleIsShufflingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_IS_SHUFFLING)
     private val nextSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_NEXT)
     private val prevSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_PREVIOUS)
-    private val toggleFavoriteIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_FAVORITE)
+    private val toggleIsFavoredIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_FAVORITE)
 
     override fun onCreate() {
 
@@ -95,7 +95,7 @@ class PlaybackService : Service() {
                         PlaybackStateCompat.CustomAction.Builder(
                             ACTION_TOGGLE_FAVORITE,
                             "FAVORITE",
-                            R.drawable.favorite
+                            if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite
                         ).build()
                     )
                     .addCustomAction(
@@ -128,7 +128,7 @@ class PlaybackService : Service() {
                                     PlaybackStateCompat.CustomAction.Builder(
                                         ACTION_TOGGLE_FAVORITE,
                                         "FAVORITE",
-                                        R.drawable.favorite
+                                        if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite
                                     ).build()
                                 )
                                 .addCustomAction(
@@ -165,7 +165,7 @@ class PlaybackService : Service() {
                                     PlaybackStateCompat.CustomAction.Builder(
                                         ACTION_TOGGLE_FAVORITE,
                                         "FAVORITE",
-                                        R.drawable.favorite
+                                        if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite
                                     ).build()
                                 )
                                 .addCustomAction(
@@ -197,7 +197,7 @@ class PlaybackService : Service() {
                                     PlaybackStateCompat.CustomAction.Builder(
                                         ACTION_TOGGLE_FAVORITE,
                                         "FAVORITE",
-                                        R.drawable.favorite
+                                        if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite
                                     ).build()
                                 )
                                 .addCustomAction(
@@ -229,7 +229,7 @@ class PlaybackService : Service() {
                                     PlaybackStateCompat.CustomAction.Builder(
                                         ACTION_TOGGLE_FAVORITE,
                                         "FAVORITE",
-                                        R.drawable.favorite
+                                        if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite
                                     ).build()
                                 )
                                 .addCustomAction(
@@ -250,7 +250,10 @@ class PlaybackService : Service() {
                     action?.let {
                         when (it) {
                             ACTION_TOGGLE_IS_SHUFFLING -> sendBroadcast(toggleIsShufflingIntent)
-                            ACTION_TOGGLE_FAVORITE -> sendBroadcast(toggleFavoriteIntent)
+                            ACTION_TOGGLE_FAVORITE -> {
+                                Log.d(TAG, "action: $it")
+                                sendBroadcast(toggleIsFavoredIntent)
+                            }
                             else -> {}
                         }
                     }
@@ -289,7 +292,7 @@ class PlaybackService : Service() {
                             PlaybackStateCompat.CustomAction.Builder(
                                 ACTION_TOGGLE_FAVORITE,
                                 "FAVORITE",
-                                R.drawable.favorite
+                                if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite
                             ).build()
                         )
                         .addCustomAction(
@@ -323,7 +326,7 @@ class PlaybackService : Service() {
                             PlaybackStateCompat.CustomAction.Builder(
                                 ACTION_TOGGLE_FAVORITE,
                                 "FAVORITE",
-                                R.drawable.favorite
+                                if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite
                             ).build()
                         )
                         .addCustomAction(
@@ -356,6 +359,8 @@ class PlaybackService : Service() {
             PendingIntent.getBroadcast(application, 3, toggleIsPlayingIntent, flag)
         val pendingToggleIsShufflingIntent =
             PendingIntent.getBroadcast(application, 4, toggleIsShufflingIntent, flag)
+        val pendingToggleIsFavoredIntent =
+            PendingIntent.getBroadcast(application, 5, toggleIsFavoredIntent, flag)
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -391,6 +396,7 @@ class PlaybackService : Service() {
             .addAction(if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off, getString(
                 R.string.toggle_is_shuffling
             ), pendingToggleIsShufflingIntent)
+            .addAction(if (uiState.value.isFavored) R.drawable.favorite_filled else R.drawable.favorite, "", pendingToggleIsFavoredIntent)
             .addAction(R.drawable.baseline_close_24, getString(R.string.close), pendingClosingIntent)
             .setContentIntent(pendingOpenActivityIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)

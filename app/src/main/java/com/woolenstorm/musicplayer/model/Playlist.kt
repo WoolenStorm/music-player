@@ -9,5 +9,6 @@ import androidx.room.PrimaryKey
 data class Playlist(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
-    @ColumnInfo(name = "songs_ids") val songsIds: List<Long> = emptyList()
+    @ColumnInfo(name = "songs_ids") val songsIds: List<Long> = emptyList(),
+    val canBeDeleted: Boolean = true
 )

@@ -13,6 +13,8 @@ import com.woolenstorm.musicplayer.NavigationType
 import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.ui.AppViewModel
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
+import com.woolenstorm.musicplayer.utils.FAVORITES_PLAYLIST
+import kotlinx.coroutines.launch
 
 private const val TAG = "PlaylistsScreen"
 
@@ -27,6 +29,7 @@ fun PlaylistsScreen(
 ) {
     val deleteDialogVisible = remember { mutableStateOf(false) }
     val playlistToDelete = remember { mutableStateOf<Playlist?>(null) }
+
     val playlists = viewModel.playlists.collectAsState().value.itemList
 
     if (deleteDialogVisible.value) {

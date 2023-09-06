@@ -13,6 +13,7 @@ import com.woolenstorm.musicplayer.utils.KEY_ALBUM_ARTWORK
 import com.woolenstorm.musicplayer.utils.KEY_ARTIST
 import com.woolenstorm.musicplayer.utils.KEY_CURRENT_INDEX
 import com.woolenstorm.musicplayer.utils.KEY_DURATION
+import com.woolenstorm.musicplayer.utils.KEY_IS_FAVORED
 import com.woolenstorm.musicplayer.utils.KEY_IS_HOMESCREEN
 import com.woolenstorm.musicplayer.utils.KEY_IS_PLAYING
 import com.woolenstorm.musicplayer.utils.KEY_IS_SHUFFLING
@@ -40,6 +41,7 @@ class SongsRepository(context: Context) {
     val uiState = _uiState.asStateFlow()
     private var _currentPlaylist = MutableStateFlow<Playlist?>(null)
     val currentPlaylist = _currentPlaylist.asStateFlow()
+    var favorites: Playlist? = null
 
     val db = PlaylistsDatabase.getDatabase(context.applicationContext)
 
@@ -64,6 +66,7 @@ class SongsRepository(context: Context) {
             isSongChosen = sharedPreferences.getBoolean(KEY_IS_SONG_CHOSEN, false),
             isHomeScreen = sharedPreferences.getBoolean(KEY_IS_HOMESCREEN, true),
             playlistId = sharedPreferences.getInt(KEY_PLAYLIST_ID, -1),
+            isFavored = sharedPreferences.getBoolean(KEY_IS_FAVORED, false),
             currentPosition = if (player.currentPosition < player.duration) player.currentPosition.toFloat()
             else 0f
         )
@@ -84,7 +87,8 @@ class SongsRepository(context: Context) {
         isHomeScreen: Boolean? = null,
         currentPosition: Float? = null,
         isExpanded: Boolean? = null,
-        playlistId: Int? = null
+        playlistId: Int? = null,
+        isFavored: Boolean? = null
     ) {
         _uiState.update {
             MusicPlayerUiState(
@@ -98,7 +102,8 @@ class SongsRepository(context: Context) {
                 playbackStarted = playbackStarted ?: uiState.value.playbackStarted,
                 isHomeScreen = isHomeScreen ?: uiState.value.isHomeScreen,
                 isExpanded = isExpanded ?: uiState.value.isExpanded,
-                playlistId = playlistId ?: uiState.value.playlistId
+                playlistId = playlistId ?: uiState.value.playlistId,
+                isFavored = isFavored ?: uiState.value.isFavored
             )
         }
     }
@@ -119,6 +124,7 @@ class SongsRepository(context: Context) {
             putString(KEY_ALBUM_ARTWORK, uiState.value.song.albumArtworkUri)
             putBoolean(KEY_IS_SONG_CHOSEN, uiState.value.isSongChosen)
             putBoolean(KEY_IS_HOMESCREEN, if (killed) true else uiState.value.isHomeScreen)
+            putBoolean(KEY_IS_FAVORED, uiState.value.isFavored)
             putInt(KEY_PLAYLIST_ID, if (killed) -1 else uiState.value.playlistId)
             Log.d(TAG, "playlistId = ${uiState.value.playlistId}")
             apply()

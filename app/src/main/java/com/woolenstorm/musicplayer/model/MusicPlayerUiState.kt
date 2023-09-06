@@ -11,5 +11,6 @@ data class MusicPlayerUiState(
     val playbackStarted: Long = 0,
     val isHomeScreen: Boolean = true,
     val isExpanded: Boolean = false,
-    val playlistId: Int = -1
+    val playlistId: Int = -1,
+    val isFavored: Boolean = false
 )

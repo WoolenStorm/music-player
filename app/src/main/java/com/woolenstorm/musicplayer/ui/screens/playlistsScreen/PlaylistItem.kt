@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Playlist
+import com.woolenstorm.musicplayer.utils.FAVORITES_PLAYLIST
 
 @Composable
 fun PlaylistItem(
@@ -44,7 +45,7 @@ fun PlaylistItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = playlist.name,
+                    text = if (playlist.canBeDeleted) playlist.name else stringResource(id = R.string.favorites),
                     fontSize = 16.sp,
                     style = MaterialTheme.typography.h6,
                     textAlign = TextAlign.Start
@@ -54,14 +55,15 @@ fun PlaylistItem(
                     style = MaterialTheme.typography.caption
                 )
             }
-
-            IconButton(
-                onClick = onOptionsClicked,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.options)
-                )
+            if (playlist.canBeDeleted) {
+                IconButton(
+                    onClick = onOptionsClicked,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.options)
+                    )
+                }
             }
         }
     }

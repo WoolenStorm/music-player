@@ -27,4 +27,5 @@
         <item quantity="other">%d songs</item>
     </plurals>
     <string name="song_search_prompt">Enter title or artist...</string>
+    <string name="favorites">Favorites</string>
 </resources>

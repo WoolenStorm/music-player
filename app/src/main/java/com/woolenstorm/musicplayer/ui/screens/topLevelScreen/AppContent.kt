@@ -79,7 +79,10 @@ fun AppContent(
                         },
                         title = {
                             Text(
-                                text = currentPlaylist?.name ?: "",
+                                text = currentPlaylist?.let {
+                                    if (!it.canBeDeleted) stringResource(id = R.string.favorites)
+                                    else it.name
+                                } ?: "",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .basicMarquee(),

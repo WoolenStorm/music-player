@@ -11,8 +11,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
 import com.woolenstorm.musicplayer.ui.AppViewModel
+import kotlinx.coroutines.launch
 
 private const val TAG = "SongDetailsScreen"
 
@@ -32,6 +34,7 @@ fun SongDetailsScreen(
     BackHandler { onGoBack() }
 
     val context = LocalContext.current.applicationContext
+    val scope = rememberCoroutineScope()
 
     Surface(modifier = modifier.fillMaxSize()) {
         Column(
@@ -49,10 +52,27 @@ fun SongDetailsScreen(
                     .align(Alignment.CenterHorizontally)
             )
             SongTitleRow(viewModel.uiState.collectAsState().value.song, modifier = Modifier.weight(.2f))
-            ShuffleButton(uiState = viewModel.uiState.collectAsState().value, onToggleShuffle = onToggleShuffle)
 
             val uiState by viewModel.uiState.collectAsState()
-            Log.d(TAG, "${viewModel.currentPosition.value}")
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                ShuffleButton(
+                    uiState = viewModel.uiState.collectAsState().value,
+                    onToggleShuffle = onToggleShuffle,
+                    modifier = Modifier.weight(0.2f)
+                )
+                Spacer(modifier = Modifier.fillMaxWidth(0.6f))
+                FavoriteButton(
+                    uiState = viewModel.uiState.collectAsState().value,
+                    onToggleFavorite = {
+                        viewModel.onToggleFavored(context)
+                    },
+                    modifier = Modifier.weight(0.2f)
+                )
+            }
+
 
             SongProgressSlider(
                 duration = uiState.song.duration,

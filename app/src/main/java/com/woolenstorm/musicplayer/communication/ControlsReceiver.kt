@@ -7,6 +7,7 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.utils.ACTION_CLOSE
@@ -14,6 +15,7 @@ import com.woolenstorm.musicplayer.utils.ACTION_OPEN_NEW_ACTIVITY
 import com.woolenstorm.musicplayer.utils.ACTION_PLAY
 import com.woolenstorm.musicplayer.utils.ACTION_PLAY_NEXT
 import com.woolenstorm.musicplayer.utils.ACTION_PLAY_PREVIOUS
+import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_FAVORITE
 import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_PLAYING
 import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_SHUFFLING
 import com.woolenstorm.musicplayer.utils.KEY_ACTION
@@ -30,6 +32,10 @@ import com.woolenstorm.musicplayer.utils.KEY_SONG_INFO_FILE
 import com.woolenstorm.musicplayer.utils.KEY_TIMESTAMP
 import com.woolenstorm.musicplayer.utils.KEY_TITLE
 import com.woolenstorm.musicplayer.utils.KEY_URI
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
@@ -44,6 +50,7 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
     private val uiState = songsRepository.uiState
     private val playlist = songsRepository.currentPlaylist
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent) {
         Log.d(TAG, "intent.action = ${intent.action}")
         Log.d(TAG, "intent.prev = ${intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_PREVIOUS_STATE, -42)}")
@@ -69,7 +76,24 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
             ACTION_TOGGLE_IS_PLAYING -> if (player.isPlaying) pause() else continuePlaying()
             ACTION_TOGGLE_IS_SHUFFLING -> onToggleShuffle()
             ACTION_OPEN_NEW_ACTIVITY -> openActivity()
-            else -> { }
+            ACTION_TOGGLE_FAVORITE -> {
+                songsRepository.favorites?.let {
+                    val songsIds = emptyList<Long>().toMutableList()
+                    songsIds.addAll(it.songsIds)
+                    if (uiState.value.isFavored) {
+                        songsIds.remove(uiState.value.song.id)
+                    } else {
+                        songsIds.add(uiState.value.song.id)
+                    }
+                    val newPlaylist = it.copy(songsIds = songsIds)
+
+                    GlobalScope.launch {
+                        songsRepository.db.playlistDao().updatePlaylist(newPlaylist)
+                    }
+                    songsRepository.updateUiState(isFavored = !uiState.value.isFavored)
+                    createNotification()
+                }
+            }
         }
     }
 

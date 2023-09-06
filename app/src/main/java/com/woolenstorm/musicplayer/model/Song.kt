@@ -11,5 +11,6 @@ data class Song(
     val path: String = "",
     val album: String = "Black Album",
     val albumId: Long = 0,
-    val albumArtworkUri: String = ""
+    val albumArtworkUri: String = "",
+    var isFavored: Boolean = false
 )
