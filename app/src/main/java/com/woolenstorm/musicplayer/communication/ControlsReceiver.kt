@@ -69,6 +69,7 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
             ACTION_TOGGLE_IS_PLAYING -> if (player.isPlaying) pause() else continuePlaying()
             ACTION_TOGGLE_IS_SHUFFLING -> onToggleShuffle()
             ACTION_OPEN_NEW_ACTIVITY -> openActivity()
+            else -> { }
         }
     }
 
@@ -118,7 +119,7 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
         val currSongs = playlist.value?.let {
             songs.filter { song -> song.id in it.songsIds }
         } ?: songs
-        if (uiState.value.isShuffling && backlog.size >= 2) {
+        if (backlog.size >= 2) {
             backlog.pop()
             val nextSong = backlog.peek()
             songsRepository.updateUiState(

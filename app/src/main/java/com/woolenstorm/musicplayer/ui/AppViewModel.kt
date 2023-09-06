@@ -202,12 +202,12 @@ class AppViewModel(private val songsRepository: SongsRepository) : ViewModel() {
             songs.filter { song -> song.id in it.songsIds }
         } ?: songs
         if (currSongs.isNotEmpty()) {
-            if (uiState.value.isShuffling && backlog.size >= 2) {
+            if (backlog.size >= 2) {
                 backlog.pop()
                 val lastSong = backlog.peek()
                 updateUiState(
                     song = lastSong,
-                    currentIndex = songs.indexOf(lastSong),
+                    currentIndex = currSongs.indexOf(lastSong),
                     currentPosition = 0f
                 )
             } else {

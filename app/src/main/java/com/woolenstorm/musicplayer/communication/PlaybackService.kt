@@ -9,6 +9,7 @@ import android.media.MediaMetadata
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
 import android.provider.MediaStore
 import android.support.v4.media.MediaMetadataCompat
@@ -26,6 +27,7 @@ import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.utils.ACTION_CLOSE
 import com.woolenstorm.musicplayer.utils.ACTION_PLAY_NEXT
 import com.woolenstorm.musicplayer.utils.ACTION_PLAY_PREVIOUS
+import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_FAVORITE
 import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_PLAYING
 import com.woolenstorm.musicplayer.utils.ACTION_TOGGLE_IS_SHUFFLING
 import com.woolenstorm.musicplayer.utils.CHANNEL_ID
@@ -51,14 +53,11 @@ class PlaybackService : Service() {
     private lateinit var uiState: StateFlow<MusicPlayerUiState>
     private val intentFilter = IntentFilter(KEY_APPLICATION_TAG)
     private val closingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_CLOSE)
-
-    private val toggleIsPlayingIntent = Intent(KEY_APPLICATION_TAG).putExtra(
-        KEY_ACTION,
-        ACTION_TOGGLE_IS_PLAYING
-    )
-
+    private val toggleIsPlayingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_IS_PLAYING)
+    private val toggleIsShufflingIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_IS_SHUFFLING)
     private val nextSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_NEXT)
     private val prevSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_PREVIOUS)
+    private val toggleFavoriteIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_FAVORITE)
 
     override fun onCreate() {
 
@@ -75,6 +74,7 @@ class PlaybackService : Service() {
         songs = songsRepository.songs
         player = songsRepository.player
         uiState = songsRepository.uiState
+
         mediaSession = MediaSessionCompat(this, "PlaybackService").apply {
             setMetadata(
                 MediaMetadataCompat.Builder()
@@ -91,6 +91,20 @@ class PlaybackService : Service() {
                                 PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
                                 PlaybackStateCompat.ACTION_SEEK_TO
                     )
+                    .addCustomAction(
+                        PlaybackStateCompat.CustomAction.Builder(
+                            ACTION_TOGGLE_FAVORITE,
+                            "FAVORITE",
+                            R.drawable.favorite
+                        ).build()
+                    )
+                    .addCustomAction(
+                        PlaybackStateCompat.CustomAction.Builder(
+                            ACTION_TOGGLE_IS_SHUFFLING,
+                            "SHUFFLE",
+                            if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+                        ).build()
+                    )
                     .build()
             )
             setCallback(object : MediaSessionCompat.Callback() {
@@ -106,10 +120,23 @@ class PlaybackService : Service() {
                                 .setState(PlaybackStateCompat.STATE_PLAYING, songsRepository.player.currentPosition.toLong(), 1f)
                                 .setActions(
                                     PlaybackStateCompat.ACTION_PAUSE or
-                                            PlaybackStateCompat.ACTION_PLAY_PAUSE or
                                             PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
                                             PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
                                             PlaybackStateCompat.ACTION_SEEK_TO
+                                )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_FAVORITE,
+                                        "FAVORITE",
+                                        R.drawable.favorite
+                                    ).build()
+                                )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_IS_SHUFFLING,
+                                        "SHUFFLE",
+                                        if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+                                    ).build()
                                 )
                                 .build()
                         )
@@ -134,6 +161,20 @@ class PlaybackService : Service() {
                                             PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
                                             PlaybackStateCompat.ACTION_SEEK_TO
                                 )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_FAVORITE,
+                                        "FAVORITE",
+                                        R.drawable.favorite
+                                    ).build()
+                                )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_IS_SHUFFLING,
+                                        "SHUFFLE",
+                                        if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+                                    ).build()
+                                )
                                 .build()
                         )
                     }
@@ -148,10 +189,23 @@ class PlaybackService : Service() {
                                 .setState(PlaybackStateCompat.STATE_PLAYING, 0, 0f)
                                 .setActions(
                                     PlaybackStateCompat.ACTION_PAUSE or
-                                            PlaybackStateCompat.ACTION_PLAY_PAUSE or
                                             PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
                                             PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
                                             PlaybackStateCompat.ACTION_SEEK_TO
+                                )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_FAVORITE,
+                                        "FAVORITE",
+                                        R.drawable.favorite
+                                    ).build()
+                                )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_IS_SHUFFLING,
+                                        "SHUFFLE",
+                                        if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+                                    ).build()
                                 )
                                 .build()
                         )
@@ -171,11 +225,36 @@ class PlaybackService : Service() {
                                             PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
                                             PlaybackStateCompat.ACTION_SEEK_TO
                                 )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_FAVORITE,
+                                        "FAVORITE",
+                                        R.drawable.favorite
+                                    ).build()
+                                )
+                                .addCustomAction(
+                                    PlaybackStateCompat.CustomAction.Builder(
+                                        ACTION_TOGGLE_IS_SHUFFLING,
+                                        "SHUFFLE",
+                                        if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+                                    ).build()
+                                )
                                 .build()
                         )
                     }
                     sendBroadcast(prevSongIntent)
                     super.onSkipToPrevious()
+                }
+
+                override fun onCustomAction(action: String?, extras: Bundle?) {
+                    action?.let {
+                        when (it) {
+                            ACTION_TOGGLE_IS_SHUFFLING -> sendBroadcast(toggleIsShufflingIntent)
+                            ACTION_TOGGLE_FAVORITE -> sendBroadcast(toggleFavoriteIntent)
+                            else -> {}
+                        }
+                    }
+//                    super.onCustomAction(action, extras)
                 }
 
                 override fun onSeekTo(pos: Long) {
@@ -206,6 +285,20 @@ class PlaybackService : Service() {
                                     PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
                                     PlaybackStateCompat.ACTION_SEEK_TO
                         )
+                        .addCustomAction(
+                            PlaybackStateCompat.CustomAction.Builder(
+                                ACTION_TOGGLE_FAVORITE,
+                                "FAVORITE",
+                                R.drawable.favorite
+                            ).build()
+                        )
+                        .addCustomAction(
+                            PlaybackStateCompat.CustomAction.Builder(
+                                ACTION_TOGGLE_IS_SHUFFLING,
+                                "SHUFFLE",
+                                if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+                            ).build()
+                        )
                         .build()
                 )
             }
@@ -222,20 +315,29 @@ class PlaybackService : Service() {
                         .setState(PlaybackStateCompat.STATE_PLAYING, songsRepository.player.currentPosition.toLong(), 1f)
                         .setActions(
                             PlaybackStateCompat.ACTION_PAUSE or
-                                    PlaybackStateCompat.ACTION_PLAY_PAUSE or
                                     PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
                                     PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
                                     PlaybackStateCompat.ACTION_SEEK_TO
+                        )
+                        .addCustomAction(
+                            PlaybackStateCompat.CustomAction.Builder(
+                                ACTION_TOGGLE_FAVORITE,
+                                "FAVORITE",
+                                R.drawable.favorite
+                            ).build()
+                        )
+                        .addCustomAction(
+                            PlaybackStateCompat.CustomAction.Builder(
+                                ACTION_TOGGLE_IS_SHUFFLING,
+                                "SHUFFLE",
+                                if (uiState.value.isShuffling) R.drawable.shuffle_on else R.drawable.shuffle_off
+                            ).build()
                         )
                         .build()
                 )
             }
         }
 
-        val toggleIsShufflingIntent = Intent(KEY_APPLICATION_TAG).putExtra(
-            KEY_ACTION,
-            ACTION_TOGGLE_IS_SHUFFLING
-        )
         val openActivityIntent = Intent(application, MainActivity::class.java).apply {
             putExtra(KEY_IS_HOMESCREEN, false)
         }
