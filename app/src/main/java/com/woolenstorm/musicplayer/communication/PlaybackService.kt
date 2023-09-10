@@ -57,20 +57,12 @@ class PlaybackService : Service() {
     private val nextSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_NEXT)
     private val prevSongIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_PLAY_PREVIOUS)
     private val toggleIsFavoredIntent = Intent(KEY_APPLICATION_TAG).putExtra(KEY_ACTION, ACTION_TOGGLE_FAVORITE)
-    private val openActivityIntent = Intent(application, MainActivity::class.java).apply { putExtra(KEY_IS_HOMESCREEN, false) }
 
     private val flag = PendingIntent.FLAG_IMMUTABLE
 
-    private val pendingClosingIntent = PendingIntent.getBroadcast(application, 0, closingIntent, flag)
-    private val pendingNextSongIntent = PendingIntent.getBroadcast(application, 1, nextSongIntent, flag)
-    private val pendingPrevSongIntent = PendingIntent.getBroadcast(application, 2, prevSongIntent, flag)
-    private val pendingToggleIsPlayingIntent = PendingIntent.getBroadcast(application, 3, toggleIsPlayingIntent, flag)
-    private val pendingToggleIsShufflingIntent = PendingIntent.getBroadcast(application, 4, toggleIsShufflingIntent, flag)
-    private val pendingOpenActivityIntent = TaskStackBuilder.create(this).run { addNextIntentWithParentStack(openActivityIntent)
-        getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    }
 
     override fun onCreate() {
+
 
         controlsReceiver = ControlsReceiver(application)
         intentFilter.apply {
@@ -222,9 +214,20 @@ class PlaybackService : Service() {
     }
 
 
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         Log.d(TAG, "onStartCommand()")
+
+        val openActivityIntent = Intent(application, MainActivity::class.java).apply { putExtra(KEY_IS_HOMESCREEN, false) }
+        val pendingClosingIntent = PendingIntent.getBroadcast(application, 0, closingIntent, flag)
+        val pendingNextSongIntent = PendingIntent.getBroadcast(application, 1, nextSongIntent, flag)
+        val pendingPrevSongIntent = PendingIntent.getBroadcast(application, 2, prevSongIntent, flag)
+        val pendingToggleIsPlayingIntent = PendingIntent.getBroadcast(application, 3, toggleIsPlayingIntent, flag)
+        val pendingToggleIsShufflingIntent = PendingIntent.getBroadcast(application, 4, toggleIsShufflingIntent, flag)
+        val pendingOpenActivityIntent = TaskStackBuilder.create(this).run { addNextIntentWithParentStack(openActivityIntent)
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
 
         if (!songsRepository.player.isPlaying) {
             mediaSession.apply {
@@ -270,10 +273,8 @@ class PlaybackService : Service() {
         }
 
 
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel =
-                NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW)
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
