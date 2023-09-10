@@ -9,12 +9,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.woolenstorm.musicplayer.NavigationType
+import com.woolenstorm.musicplayer.utils.NavigationType
 import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.ui.AppViewModel
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
-import com.woolenstorm.musicplayer.utils.FAVORITES_PLAYLIST
-import kotlinx.coroutines.launch
 
 private const val TAG = "PlaylistsScreen"
 

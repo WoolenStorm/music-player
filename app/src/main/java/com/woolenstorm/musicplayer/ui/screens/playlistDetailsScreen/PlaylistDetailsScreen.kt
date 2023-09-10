@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.woolenstorm.musicplayer.NavigationType
+import com.woolenstorm.musicplayer.utils.NavigationType
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.AppViewModel

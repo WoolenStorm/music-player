@@ -1,13 +1,11 @@
 package com.woolenstorm.musicplayer.ui
 
-import android.content.ContentProvider
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.*
-import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -18,7 +16,9 @@ import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.communication.PlaybackService
 import com.woolenstorm.musicplayer.data.SongsRepository
 import com.woolenstorm.musicplayer.model.*
+import com.woolenstorm.musicplayer.utils.CurrentScreen
 import com.woolenstorm.musicplayer.utils.FAVORITES_PLAYLIST
+import com.woolenstorm.musicplayer.utils.NavigationType
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.random.Random

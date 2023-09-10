@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.woolenstorm.musicplayer.NavigationType
+import com.woolenstorm.musicplayer.utils.NavigationType
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.screens.topLevelScreen.TopLevelScreen

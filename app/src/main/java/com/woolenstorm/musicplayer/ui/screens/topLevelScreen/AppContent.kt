@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import com.woolenstorm.musicplayer.CurrentScreen
+import com.woolenstorm.musicplayer.utils.CurrentScreen
 import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song

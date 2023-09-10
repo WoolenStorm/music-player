@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.woolenstorm.musicplayer.CurrentScreen
+import com.woolenstorm.musicplayer.utils.CurrentScreen
 import com.woolenstorm.musicplayer.ui.NavigationItemContent
 
 @Composable

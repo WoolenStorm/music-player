@@ -8,12 +8,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.woolenstorm.musicplayer.*
 import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song
 import com.woolenstorm.musicplayer.ui.AppViewModel
 import com.woolenstorm.musicplayer.ui.screens.songDetailsScreen.SongDetailsScreen
 import com.woolenstorm.musicplayer.ui.theme.MusicPlayerTheme
+import com.woolenstorm.musicplayer.utils.CurrentScreen
+import com.woolenstorm.musicplayer.utils.NavigationType
 
 private const val TAG = "TopLevelScreen"
 
