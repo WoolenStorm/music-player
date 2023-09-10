@@ -1,4 +1,4 @@
-package com.woolenstorm.musicplayer
+package com.woolenstorm.musicplayer.utils
 
 import android.content.Context
 import android.content.res.Configuration
@@ -8,13 +8,14 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.toMutableStateList
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import com.woolenstorm.musicplayer.R
 import com.woolenstorm.musicplayer.model.Playlist
 import com.woolenstorm.musicplayer.model.Song
 
 fun getBitmapFromDrawable(ctx: Context, @DrawableRes drawableId: Int): Bitmap? {
     var drawable = ContextCompat.getDrawable(ctx, drawableId)
     drawable?.let {
-        val color = ctx.resources.getColor(if (isDarkModeOn(ctx)) R.color.peach else R.color.cocoa)
+        val color = ctx.resources.getColor(if (isDarkModeOn(ctx)) R.color.peach else R.color.cocoa, ctx.theme)
         val d = DrawableCompat.wrap(it)
         DrawableCompat.setTint(d, color)
         drawable = d.mutate()
