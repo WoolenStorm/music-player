@@ -52,9 +52,9 @@ class ControlsReceiver(private val application: Application) : BroadcastReceiver
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent) {
-        Log.d(TAG, "intent.action = ${intent.action}")
-        Log.d(TAG, "intent.prev = ${intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_PREVIOUS_STATE, -42)}")
-        Log.d(TAG, "intent.curr = ${intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, 42)}")
+//        Log.d(TAG, "intent.action = ${intent.action}")
+//        Log.d(TAG, "intent.prev = ${intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_PREVIOUS_STATE, -42)}")
+//        Log.d(TAG, "intent.curr = ${intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, 42)}")
         if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
             pause()
             return
